@@ -2429,3 +2429,155 @@ public:
 };
 ```
 
+## [剑指 Offer 65. 不用加减乘除做加法](https://leetcode.cn/problems/bu-yong-jia-jian-cheng-chu-zuo-jia-fa-lcof/)
+
+### 解法1：位运算
+
+```C++
+class Solution {
+public:
+    int add(int a, int b) {
+        while(b!=0){
+            unsigned carry=(unsigned)(a&b)<<1;
+            a^=b;
+            b=carry;
+        }
+        return a;
+    }
+};
+```
+
+## [剑指 Offer 66. 构建乘积数组](https://leetcode.cn/problems/gou-jian-cheng-ji-shu-zu-lcof/)
+
+### 解法1：左右乘积列表
+
+```C++
+class Solution {
+public:
+    vector<int> constructArr(vector<int>& a) {
+        vector<int> left(a.size(),1),right(a.size(),1);
+        for(int i=1;i<a.size();i++) left[i]=left[i-1]*a[i-1];
+        for(int i=a.size()-2;i>=0;i--) right[i]=right[i+1]*a[i+1];
+        vector<int> result(a.size(),0);
+        for(int i=0;i<a.size();i++) result[i]=left[i]*right[i];
+        return result;
+    }
+};
+```
+
+### 解法2：左右乘积列表优化
+
+```C++
+class Solution {
+public:
+    vector<int> constructArr(vector<int>& a) {
+        vector<int> result(a.size(),1);
+        for(int i=1;i<a.size();i++) result[i]=result[i-1]*a[i-1];
+        int r=1;
+        for(int i=a.size()-1;i>=0;i--){
+            result[i]=result[i]*r;
+            r*=a[i];
+        }
+        return result;
+    }
+};
+```
+
+## [剑指 Offer 68 - I. 二叉搜索树的最近公共祖先](https://leetcode.cn/problems/er-cha-sou-suo-shu-de-zui-jin-gong-gong-zu-xian-lcof/)
+
+### 解法1
+
+```C++
+/**
+ * Definition for a binary tree node.
+ * struct TreeNode {
+ *     int val;
+ *     TreeNode *left;
+ *     TreeNode *right;
+ *     TreeNode(int x) : val(x), left(NULL), right(NULL) {}
+ * };
+ */
+class Solution {
+public:
+    TreeNode* lowestCommonAncestor(TreeNode* root, TreeNode* p, TreeNode* q) {
+        if(p->val>q->val) swap(p,q);
+        TreeNode *node=root;
+        while(true)
+        {
+            if(node->val<p->val) node=node->right;
+            else if(node->val>q->val) node=node->left;
+            else return node;
+        }
+        return NULL;
+    }
+};
+```
+
+## ==[剑指 Offer 68 - II. 二叉树的最近公共祖先](https://leetcode.cn/problems/er-cha-shu-de-zui-jin-gong-gong-zu-xian-lcof/)==
+
+### 解法1：递归
+
+```C++
+/**
+ * Definition for a binary tree node.
+ * struct TreeNode {
+ *     int val;
+ *     TreeNode *left;
+ *     TreeNode *right;
+ *     TreeNode(int x) : val(x), left(NULL), right(NULL) {}
+ * };
+ */
+class Solution {
+public:
+    TreeNode* lowestCommonAncestor(TreeNode* root, TreeNode* p, TreeNode* q) {
+        if(root==NULL) return NULL;
+        if(root==p||root==q) return root;
+        TreeNode *left=lowestCommonAncestor(root->left,p,q);
+        TreeNode *right=lowestCommonAncestor(root->right,p,q);
+        if(left==NULL&&right==NULL) return NULL;
+        else if(left==NULL) return right;
+        else if(right==NULL) return left;
+        else return root;
+    }
+};
+```
+
+### 解法2：存储父节点
+
+```C++
+/**
+ * Definition for a binary tree node.
+ * struct TreeNode {
+ *     int val;
+ *     TreeNode *left;
+ *     TreeNode *right;
+ *     TreeNode(int x) : val(x), left(NULL), right(NULL) {}
+ * };
+ */
+class Solution {
+public:
+    unordered_map<int,TreeNode*> hash;
+    unordered_map<int,bool> visit;
+    void DFS(TreeNode* node){
+        if(node==NULL) return;
+        if(node->left) hash[node->left->val]=node;
+        if(node->right) hash[node->right->val]=node;
+        DFS(node->left);
+        DFS(node->right);
+    }
+    TreeNode* lowestCommonAncestor(TreeNode* root, TreeNode* p, TreeNode* q) {
+        hash[root->val]=NULL;
+        DFS(root);
+        while(p!=NULL){
+            visit[p->val]=true;
+            p=hash[p->val];
+        }
+        while(q!=NULL){
+            if(visit[q->val]==true) return q;
+            q=hash[q->val];
+        }
+        return NULL;
+    }
+};
+```
+
