@@ -2581,3 +2581,32 @@ public:
 };
 ```
 
+## [面试题45. 把数组排成最小的数](https://leetcode.cn/problems/ba-shu-zu-pai-cheng-zui-xiao-de-shu-lcof/)
+
+## [面试题61. 扑克牌中的顺子](https://leetcode.cn/problems/bu-ke-pai-zhong-de-shun-zi-lcof/)
+
+### 解法1：哈希
+
+```C++
+class Solution {
+public:
+    bool isStraight(vector<int>& nums) {
+        int count[14]={0};
+        int min=14,max=0;
+        for(int i=0;i<nums.size();i++){
+            count[nums[i]]++;
+            if(nums[i]!=0&&nums[i]<min) min=nums[i];
+            if(nums[i]!=0&&nums[i]>max) max=nums[i];
+        }
+        if(count[0]==5) return true;
+        for(int i=min;i<=max;i++){
+            if(count[i]>1) return false;
+            else if(count[i]==1) continue;
+            else if(count[i]==0&&count[0]) count[0]--;
+            else return false;
+        }
+        return true;
+    }
+};
+```
+
