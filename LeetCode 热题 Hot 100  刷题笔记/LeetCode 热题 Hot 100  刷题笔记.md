@@ -1048,7 +1048,7 @@ public:
 
 ## [48. 旋转图像](https://leetcode.cn/problems/rotate-image/)
 
-### 解法1
+### 解法1：模拟
 
 $$
 O(n^2)+O(1)
@@ -1072,5 +1072,1204 @@ public:
 };
 ```
 
+## ==[49. 字母异位词分组](https://leetcode.cn/problems/group-anagrams/)==
 
+### 解法1：排序+哈希
+
+$$
+O(nk\log k)+O(nk)
+$$
+
+```C++
+class Solution {
+public:
+    vector<vector<string>> groupAnagrams(vector<string>& strs) {
+        unordered_map<string,vector<string>> hash;
+        string ans;
+        for(auto &it:strs){
+            ans=it;
+            sort(ans.begin(),ans.end());
+            hash[ans].push_back(it);
+        }
+        vector<vector<string>> strings;
+        for(auto &it:hash) strings.push_back(it.second);
+        return strings;
+    }
+};
+```
+
+### ==笔记==
+
+使用`map`容器实现一对多，可借助`vector`
+
+## [53. 最大子数组和](https://leetcode.cn/problems/maximum-subarray/)
+
+### 解法1：动态规划
+
+$$
+O(n)+O(n)
+$$
+
+```C++
+class Solution {
+public:
+    int maxSubArray(vector<int>& nums) {
+        vector<int> dp(nums.size()+1,0);
+        int MAX=-10010;
+        for(int i=1;i<=nums.size();i++){
+            dp[i]=max(nums[i-1],dp[i-1]+nums[i-1]);
+            MAX=max(MAX,dp[i]);
+        }
+        return MAX;
+    }
+};
+```
+
+### 解法2：贪心
+
+$$
+O(n)+O(1)
+$$
+
+```C++
+class Solution {
+public:
+    int maxSubArray(vector<int>& nums) {
+        vector<int> dp(nums.size()+1,0);
+        int MAX=-10010;
+        for(int i=1;i<=nums.size();i++){
+            dp[i]=max(nums[i-1],dp[i-1]+nums[i-1]);
+            MAX=max(MAX,dp[i]);
+        }
+        return MAX;
+    }
+};
+```
+
+## [55. 跳跃游戏](https://leetcode.cn/problems/jump-game/)
+
+### 解法1：贪心
+
+$$
+O(n)+O(1)
+$$
+
+```C++
+class Solution {
+public:
+    bool canJump(vector<int>& nums) {
+        int k=0;
+        for(int i=0;i<nums.size();i++){
+            if(k<i) return false;
+            k=max(k,i+nums[i]);
+        }
+        return true;
+    }
+};
+```
+
+## [56. 合并区间](https://leetcode.cn/problems/merge-intervals/)
+
+### 解法1：排序
+
+$$
+O(n\log n)+O(1)
+$$
+
+```C++
+class Solution {
+public:
+    static bool cmp(const vector<int>& u,const vector<int>& v){
+        if(u[0]!=v[0]) return u[0]<v[0];
+        else return u[1]<v[1];
+    }
+    vector<vector<int>> merge(vector<vector<int>>& intervals) {
+        vector<vector<int>> result;
+        vector<int> tmp;
+        sort(intervals.begin(),intervals.end(),cmp);
+        tmp.push_back(intervals[0][0]);
+        tmp.push_back(intervals[0][1]);
+
+        for(int i=1;i<intervals.size();i++){
+            if(intervals[i][0]>tmp[1]){
+                result.push_back(tmp);
+                tmp[0]=intervals[i][0];
+                tmp[1]=intervals[i][1];
+            }
+            else tmp[1]=max(tmp[1],intervals[i][1]);
+        }
+        result.push_back(tmp);
+
+        return result;
+    }
+};
+```
+
+## [62. 不同路径](https://leetcode.cn/problems/unique-paths/)
+
+### 解法1：动态规划
+
+$$
+O(mn)+O(mn)
+$$
+
+```C++
+class Solution {
+public:
+    int uniquePaths(int m, int n) {
+        int dp[110][110];
+        for(int i=0;i<=n;i++) dp[0][i]=0;
+        for(int i=0;i<=m;i++) dp[i][0]=0;
+        dp[1][0]=1;
+        for(int i=1;i<=m;i++)
+            for(int j=1;j<=n;j++)
+                dp[i][j]=dp[i-1][j]+dp[i][j-1];
+        return dp[m][n];
+    }
+};
+```
+
+### 解法2：动态规划+滚动数组优化
+
+$$
+O(mn)+O(n)
+$$
+
+```C++
+class Solution {
+public:
+    int uniquePaths(int m, int n) {
+        vector<int> dp(n+1);
+        dp[1]=1;
+        for(int i=1;i<=m;i++)
+            for(int j=2;j<=n;j++)
+                dp[j]=dp[j]+dp[j-1];
+        return dp[n];
+    }
+};
+```
+
+## [64. 最小路径和](https://leetcode.cn/problems/minimum-path-sum/)
+
+### 解法1：动态规划
+
+$$
+O(mn)+O(mn)
+$$
+
+```C++
+class Solution {
+public:
+    int minPathSum(vector<vector<int>>& grid) {
+        int m=grid.size(),n=grid[0].size();
+        vector<vector<int>> dp(m,vector<int>(n,0));
+        for(int i=0;i<m;i++){
+            for(int j=0;j<n;j++){
+                if(i&&j) dp[i][j]=min(dp[i-1][j],dp[i][j-1])+grid[i][j];
+                else if(i) dp[i][j]=dp[i-1][j]+grid[i][j];
+                else if(j) dp[i][j]=dp[i][j-1]+grid[i][j];
+                else dp[i][j]=grid[i][j];
+            }
+        }
+        return dp[m-1][n-1];
+    }
+};
+```
+
+### 解法2：动态规划+滚动数组优化
+
+$$
+O(mn)+O(n)
+$$
+
+```C++
+class Solution {
+public:
+    int minPathSum(vector<vector<int>>& grid) {
+        int m=grid.size(),n=grid[0].size();
+        vector<int> dp(n,0);
+        for(int i=0;i<m;i++){
+            for(int j=0;j<n;j++){
+                if(i&&j) dp[j]=min(dp[j],dp[j-1])+grid[i][j];
+                else if(j) dp[j]=dp[j-1]+grid[i][j];
+                else dp[j]+=grid[i][j];
+            }
+        }
+        return dp[n-1];
+    }
+};
+```
+
+## [70. 爬楼梯](https://leetcode.cn/problems/climbing-stairs/)
+
+### 解法1：动态规划
+
+$$
+O(n)+O(n)
+$$
+
+```C++
+class Solution {
+public:
+    int climbStairs(int n) {
+        int dp[50];
+        dp[0]=1,dp[1]=1;
+        for(int i=2;i<=n;i++) dp[i]=dp[i-2]+dp[i-1];
+        return dp[n];
+    }
+};
+```
+
+### 解法2：递推
+
+$$
+O(n)+O(1)
+$$
+
+```C++
+class Solution {
+public:
+    int climbStairs(int n) {
+        int pre=1,now=1;
+        while(--n){
+            int temp=now;
+            now=now+pre;
+            pre=temp;
+        }
+        return now;
+    }
+};
+```
+
+## [72. 编辑距离](https://leetcode.cn/problems/edit-distance/)
+
+### 解法1：动态规划
+
+$$
+O(mn)+O(mn)
+$$
+
+```C++
+class Solution {
+public:
+    int minDistance(string word1, string word2) {
+        vector<vector<int>> dp(word1.length()+1,vector<int>(word2.length()+1,0));
+        for(int i=0;i<=word2.length();i++) dp[0][i]=i;
+        for(int i=0;i<=word1.length();i++) dp[i][0]=i;
+        for(int i=1;i<=word1.length();i++){
+            for(int j=1;j<=word2.length();j++){
+                if(word1[i-1]==word2[j-1]) dp[i][j]=dp[i-1][j-1];
+                else dp[i][j]=min(min(dp[i-1][j-1],dp[i-1][j]),dp[i][j-1])+1;
+            }
+        }
+        return dp[word1.length()][word2.length()];
+    }
+};
+```
+
+## [75. 颜色分类](https://leetcode.cn/problems/sort-colors/)
+
+### 解法1：三指针
+
+$$
+O(n)+O(1)
+$$
+
+```C++
+class Solution {
+public:
+    void sortColors(vector<int>& nums) {
+        int i=0,j=0,k=nums.size()-1;
+        while(j<=k){
+            switch(nums[j]){
+                case 0:
+                    swap(nums[i],nums[j]),i++,j++;
+                    break;
+                case 1:
+                    j++;
+                    break;
+                case 2:
+                    swap(nums[j],nums[k]),k--;
+                    break;
+            }
+        }
+    }
+};
+```
+
+## [76. 最小覆盖子串](https://leetcode.cn/problems/minimum-window-substring/)
+
+### 解法1：滑动窗口
+
+$$
+O(m+n)+O(C)
+$$
+
+```C++
+class Solution {
+public:
+    string minWindow(string s, string t) {
+        bool st[52];
+        int num[52];
+        memset(st,false,sizeof(st)),memset(num,0,sizeof(num));
+        
+        for(int i=0;i<t.length();i++){
+            if(t[i]>='a'&&t[i]<='z') st[t[i]-'a']=true,num[t[i]-'a']++;
+            else st[t[i]-'A'+26]=true,num[t[i]-'A'+26]++;
+        }
+        int i,j,id=0,jd=s.length()-1;
+        for(i=0,j=0;j<s.length();j++){
+            if(s[j]>='a'&&s[j]<='z'&&st[s[j]-'a']==true) num[s[j]-'a']--;
+            if(s[j]>='A'&&s[j]<='Z'&&st[s[j]-'A'+26]==true) num[s[j]-'A'+26]--;
+            bool flag=true;
+            for(int k=0;k<52;k++)
+                if(st[k]==true&&num[k]>0) flag=false;
+            while(flag==true){
+                if(s[i]>='a'&&s[i]<='z'){
+                    if(st[s[i]-'a']==false) i++;
+                    else if(st[s[i]-'a']==true&&num[s[i]-'a']<0) num[s[i]-'a']++,i++;
+                    else break;
+                }
+                if(s[i]>='A'&&s[i]<='Z'){
+                    if(st[s[i]-'A'+26]==false) i++;
+                    else if(st[s[i]-'A'+26]==true&&num[s[i]-'A'+26]<0) num[s[i]-'A'+26]++,i++;
+                    else break;
+                }
+            }
+            if(flag==true&&j-i<jd-id) jd=j,id=i;
+        }
+
+        int k;
+        for(k=0;k<52;k++)
+            if(st[k]==true&&num[k]>0) break;
+        if(k==52) return s.substr(id,jd-id+1);
+        else return "";
+    }
+};
+```
+
+## [78. 子集](https://leetcode.cn/problems/subsets/)
+
+### 解法1：回溯
+
+$$
+O(n×2^n)+O(n)
+$$
+
+```C++
+class Solution {
+public:
+    vector<vector<int>> result;
+    vector<int> path;
+    void backtracking(int index,const vector<int> &nums){
+        if(index==nums.size()){
+            result.push_back(path);
+            return;
+        }
+        backtracking(index+1,nums);
+        path.push_back(nums[index]);
+        backtracking(index+1,nums);
+        path.pop_back();
+    }
+    vector<vector<int>> subsets(vector<int>& nums) {
+        result.clear(),path.clear();
+        backtracking(0,nums);
+        return result;
+    }
+};
+```
+
+### 解法2：二进制
+
+$$
+O(n×2^n)+O(n)
+$$
+
+```C++
+class Solution {
+public:
+    vector<int> path;
+    vector<vector<int>> result;
+
+    vector<vector<int>> subsets(vector<int>& nums) {
+        int n = nums.size();
+        for (int i = 0; i < (1 << n); i++) {
+            path.clear();
+            for (int j = 0; j < n; j++) {
+                if (i & (1 << j)) {
+                    path.push_back(nums[j]);
+                }
+            }
+            result.push_back(path);
+        }
+        return result;
+    }
+};
+```
+
+## [79. 单词搜索](https://leetcode.cn/problems/word-search/)
+
+### 解法1：回溯
+
+$$
+略
+$$
+
+```C++
+class Solution {
+public:
+    bool traversal(int x,int y,int index,vector<vector<char>>& board,string word, vector<vector<bool>>& visit){
+        if(index==word.length()-1&&board[x][y]==word[index]) return true;
+        else if(board[x][y]!=word[index]) return false;
+        int dx[]={0,1,0,-1};
+        int dy[]={1,0,-1,0};
+        for(int i=0;i<4;i++)
+            if(x+dx[i]>=0&&x+dx[i]<board.size()&&y+dy[i]>=0&&y+dy[i]<board[0].size())
+                if(visit[x+dx[i]][y+dy[i]]==false){
+                    visit[x+dx[i]][y+dy[i]]=true;
+                    if(traversal(x+dx[i],y+dy[i],index+1,board,word,visit)) return true;
+                    visit[x+dx[i]][y+dy[i]]=false;
+                }
+        return false;
+    }
+    bool exist(vector<vector<char>>& board, string word) {
+        vector<vector<bool>> visit(board.size(),vector<bool>(board[0].size(),false));
+        for(int i=0;i<board.size();i++)
+            for(int j=0;j<board[0].size();j++)
+                if(board[i][j]==word[0]){
+                    visit[i][j]=true;
+                    if(traversal(i,j,0,board,word,visit)==true) return true;
+                    visit[i][j]=false;
+                }
+        return false;
+    }
+};
+```
+
+## [84. 柱状图中最大的矩形](https://leetcode.cn/problems/largest-rectangle-in-histogram/)
+
+### 解法1：单调栈
+
+$$
+O(n)+O(n)
+$$
+
+```C++
+class Solution {
+public:
+    int largestRectangleArea(vector<int>& heights) {
+        stack<int>st;
+        heights.insert(heights.begin(), 0);
+        heights.push_back(0);
+        int sum=0;
+        for(int i=0;i<heights.size();i++){
+            while(!st.empty()&&heights[i]<heights[st.top()]){
+                int mid=st.top();
+                st.pop();
+                if(!st.empty()) sum=max(sum,heights[mid]*(i-st.top()-1));
+            }
+            st.push(i);
+        }
+        return sum;
+    }
+};
+```
+
+### 解法2：动态规划
+
+$$
+O(n)+O(n)
+$$
+
+```C++
+class Solution {
+public:
+    int largestRectangleArea(vector<int>& heights) {
+        vector<int> left(heights.size());
+        vector<int> right(heights.size());
+        left[0]=-1,right[0]=heights.size();
+        for(int i=0;i<heights.size();i++){
+            int t=i-1;
+            while(t>=0&&heights[t]>=heights[i]) t=left[t];
+            left[i]=t;
+        }
+        for(int i=heights.size()-1;i>=0;i--){
+            int t=i+1;
+            while(t<heights.size()&&heights[t]>=heights[i]) t=right[t];
+            right[i]=t;
+        }
+        int sum=0;
+        for(int i=0;i<heights.size();i++) sum=max(sum,(right[i]-left[i]-1)*heights[i]);
+        return sum;
+    }
+};
+```
+
+## [85. 最大矩形](https://leetcode.cn/problems/maximal-rectangle/)
+
+### 解法1：单调栈
+
+$$
+O(mn)+O(n)
+$$
+
+```C++
+class Solution {
+public:
+    int maximalRectangle(vector<vector<char>>& matrix) {
+        if(matrix.size()==0||matrix[0].size()==0) return 0;
+        int m=matrix.size(),n=matrix[0].size();
+        vector<int> height(n+2,0);
+        int sum=0;
+        for(int i=0;i<m;i++){
+            for(int j=0;j<n;j++){
+                if(matrix[i][j]=='1') height[j+1]+=1;
+                else height[j+1]=0;
+            }
+            stack<int> st;
+            for(int j=0;j<n+2;j++){
+                while(!st.empty()&&height[j]<height[st.top()]){
+                    int mid=st.top();
+                    st.pop();
+                    if(!st.empty()) sum=max(sum,height[mid]*(j-st.top()-1));
+                }
+                st.push(j);
+            }
+        }
+        return sum;
+    }
+};
+```
+
+## [94. 二叉树的中序遍历](https://leetcode.cn/problems/binary-tree-inorder-traversal/)
+
+### 解法1：中序遍历（递归）
+
+$$
+O(n)+O(n)
+$$
+
+```C++
+/**
+ * Definition for a binary tree node.
+ * struct TreeNode {
+ *     int val;
+ *     TreeNode *left;
+ *     TreeNode *right;
+ *     TreeNode() : val(0), left(nullptr), right(nullptr) {}
+ *     TreeNode(int x) : val(x), left(nullptr), right(nullptr) {}
+ *     TreeNode(int x, TreeNode *left, TreeNode *right) : val(x), left(left), right(right) {}
+ * };
+ */
+class Solution {
+public:
+    void traversal(TreeNode *cur,vector<int> &vec){
+        if(cur==NULL) return;
+        traversal(cur->left,vec);
+        vec.push_back(cur->val);
+        traversal(cur->right,vec);
+    }
+    vector<int> inorderTraversal(TreeNode* root) {
+        vector<int> vec;
+        traversal(root,vec);
+        return vec;
+    }
+};
+```
+
+### 解法2：中序遍历（迭代）
+
+$$
+O(n)+O(n)
+$$
+
+```C++
+/**
+ * Definition for a binary tree node.
+ * struct TreeNode {
+ *     int val;
+ *     TreeNode *left;
+ *     TreeNode *right;
+ *     TreeNode() : val(0), left(nullptr), right(nullptr) {}
+ *     TreeNode(int x) : val(x), left(nullptr), right(nullptr) {}
+ *     TreeNode(int x, TreeNode *left, TreeNode *right) : val(x), left(left), right(right) {}
+ * };
+ */
+class Solution {
+public:
+    vector<int> inorderTraversal(TreeNode* root) {
+        vector<int> result;
+        stack<TreeNode*> st;
+        TreeNode *node=root;
+        while(node||!st.empty()){
+            if(node){
+                st.push(node);
+                node=node->left;
+            }
+            else{
+                node=st.top();
+                st.pop();
+                result.push_back(node->val);
+                node=node->right;
+            }
+        }
+        return result;
+    }
+};
+```
+
+## [96. 不同的二叉搜索树](https://leetcode.cn/problems/unique-binary-search-trees/)
+
+### 解法1：动态规划
+
+$$
+O(n)+O(n)
+$$
+
+```C++
+class Solution {
+public:
+    int numTrees(int n) {
+        vector<int> dp(n+1,0);
+        dp[0]=1;
+        for(int i=1;i<=n;i++){
+            for(int j=1;j<=i;j++)
+                dp[i]+=dp[j-1]*dp[i-j];
+        }
+        return dp[n];
+    }
+};
+```
+
+## [98. 验证二叉搜索树](https://leetcode.cn/problems/validate-binary-search-tree/)
+
+### 解法1：中序遍历（递归）
+
+$$
+O(n)+O(n)
+$$
+
+```C++
+/**
+ * Definition for a binary tree node.
+ * struct TreeNode {
+ *     int val;
+ *     TreeNode *left;
+ *     TreeNode *right;
+ *     TreeNode() : val(0), left(nullptr), right(nullptr) {}
+ *     TreeNode(int x) : val(x), left(nullptr), right(nullptr) {}
+ *     TreeNode(int x, TreeNode *left, TreeNode *right) : val(x), left(left), right(right) {}
+ * };
+ */
+class Solution {
+public:
+    vector<int> vec;
+    bool isValidBST(TreeNode* root) {
+        if(root==NULL) return true;
+        bool leftFlag=isValidBST(root->left);
+        if(vec.size()>0&&root->val<=vec.back()) return false;
+        vec.push_back(root->val);
+        bool rightFlag=isValidBST(root->right);
+        return leftFlag&&rightFlag;
+    }
+};
+```
+
+### 解法2：中序遍历（迭代）
+
+$$
+O(n)+O(n)
+$$
+
+```C++
+/**
+ * Definition for a binary tree node.
+ * struct TreeNode {
+ *     int val;
+ *     TreeNode *left;
+ *     TreeNode *right;
+ *     TreeNode() : val(0), left(nullptr), right(nullptr) {}
+ *     TreeNode(int x) : val(x), left(nullptr), right(nullptr) {}
+ *     TreeNode(int x, TreeNode *left, TreeNode *right) : val(x), left(left), right(right) {}
+ * };
+ */
+class Solution {
+public:
+    bool isValidBST(TreeNode* root) {
+        vector<int> vec;
+        stack<TreeNode*> st;
+        TreeNode *node=root;
+        while(node||!st.empty()){
+            if(node){
+                st.push(node);
+                node=node->left;
+            }
+            else{
+                node=st.top();
+                st.pop();
+                vec.push_back(node->val);
+                if(vec.size()>1&&vec[vec.size()-2]>=vec[vec.size()-1]) return false;
+                node=node->right;
+            }
+        }
+        return true;
+    }
+};
+```
+
+## [101. 对称二叉树](https://leetcode.cn/problems/symmetric-tree/)
+
+### 解法1：层序遍历
+
+$$
+O(n)+O(n)
+$$
+
+```C++
+/**
+ * Definition for a binary tree node.
+ * struct TreeNode {
+ *     int val;
+ *     TreeNode *left;
+ *     TreeNode *right;
+ *     TreeNode() : val(0), left(nullptr), right(nullptr) {}
+ *     TreeNode(int x) : val(x), left(nullptr), right(nullptr) {}
+ *     TreeNode(int x, TreeNode *left, TreeNode *right) : val(x), left(left), right(right) {}
+ * };
+ */
+class Solution {
+public:
+    bool isSymmetric(TreeNode* root) {
+        if(root==NULL) return true;
+        queue<TreeNode*> que;
+        que.push(root->left),que.push(root->right);
+        while(!que.empty())
+        {
+            TreeNode *left_node=que.front();
+            que.pop();
+            TreeNode *right_node=que.front();
+            que.pop();
+            if(left_node==NULL&&right_node==NULL) continue;
+            else if(left_node==NULL||right_node==NULL) return false;
+            else if(left_node->val!=right_node->val) return false;
+            que.push(left_node->left),que.push(right_node->right);
+            que.push(left_node->right),que.push(right_node->left);
+        }
+        return true;
+    }
+};
+```
+
+### 解法2：递归
+
+$$
+O(n)+O(n)
+$$
+
+```C++
+/**
+ * Definition for a binary tree node.
+ * struct TreeNode {
+ *     int val;
+ *     TreeNode *left;
+ *     TreeNode *right;
+ *     TreeNode() : val(0), left(nullptr), right(nullptr) {}
+ *     TreeNode(int x) : val(x), left(nullptr), right(nullptr) {}
+ *     TreeNode(int x, TreeNode *left, TreeNode *right) : val(x), left(left), right(right) {}
+ * };
+ */
+class Solution {
+public:
+    bool compare(TreeNode *left_node,TreeNode *right_node)
+    {
+        if(left_node==NULL||right_node==NULL) return left_node==NULL&&right_node==NULL;
+        if(left_node->val!=right_node->val) return false;
+        return compare(left_node->left,right_node->right)&&compare(left_node->right,right_node->left);
+    }
+    bool isSymmetric(TreeNode* root) {
+        if(root==NULL) return true;
+        return compare(root->left,root->right);
+    }
+};
+```
+
+## [102. 二叉树的层序遍历](https://leetcode.cn/problems/binary-tree-level-order-traversal/)
+
+### 解法1：层序遍历
+
+$$
+O(n)+O(n)
+$$
+
+```C++
+/**
+ * Definition for a binary tree node.
+ * struct TreeNode {
+ *     int val;
+ *     TreeNode *left;
+ *     TreeNode *right;
+ *     TreeNode() : val(0), left(nullptr), right(nullptr) {}
+ *     TreeNode(int x) : val(x), left(nullptr), right(nullptr) {}
+ *     TreeNode(int x, TreeNode *left, TreeNode *right) : val(x), left(left), right(right) {}
+ * };
+ */
+class Solution {
+public:
+    vector<vector<int>> levelOrder(TreeNode* root) {
+        vector<vector<int>> result;
+        queue<TreeNode*> que;
+        if(root) que.push(root);
+        while(!que.empty()){
+            int Size=que.size();
+            vector<int> vec;
+            for(int i=0;i<Size;i++){
+                TreeNode* node=que.front();
+                que.pop();
+                vec.push_back(node->val);
+                if(node->left) que.push(node->left);
+                if(node->right) que.push(node->right);
+            }
+            result.push_back(vec);
+        }
+        return result;
+    }
+};
+```
+
+## [104. 二叉树的最大深度](https://leetcode.cn/problems/maximum-depth-of-binary-tree/)
+
+### 解法1：递归
+
+$$
+O(n)+O(n)
+$$
+
+```C++
+/**
+ * Definition for a binary tree node.
+ * struct TreeNode {
+ *     int val;
+ *     TreeNode *left;
+ *     TreeNode *right;
+ *     TreeNode() : val(0), left(nullptr), right(nullptr) {}
+ *     TreeNode(int x) : val(x), left(nullptr), right(nullptr) {}
+ *     TreeNode(int x, TreeNode *left, TreeNode *right) : val(x), left(left), right(right) {}
+ * };
+ */
+class Solution {
+public:
+    int maxDepth(TreeNode* root) {
+        if(root==NULL) return 0;
+        return 1+max(maxDepth(root->left),maxDepth(root->right));
+    }
+};
+```
+
+## [105. 从前序与中序遍历序列构造二叉树](https://leetcode.cn/problems/construct-binary-tree-from-preorder-and-inorder-traversal/)
+
+### 解法1：递归+分治
+
+$$
+O(n^2)+O(n)
+$$
+
+```C++
+/**
+ * Definition for a binary tree node.
+ * struct TreeNode {
+ *     int val;
+ *     TreeNode *left;
+ *     TreeNode *right;
+ *     TreeNode() : val(0), left(nullptr), right(nullptr) {}
+ *     TreeNode(int x) : val(x), left(nullptr), right(nullptr) {}
+ *     TreeNode(int x, TreeNode *left, TreeNode *right) : val(x), left(left), right(right) {}
+ * };
+ */
+class Solution {
+public:
+    vector<int> pre_order,in_order;
+    TreeNode* traversal(int l1,int r1,int l2,int r2)
+    {
+        if(l1>r1||l2>r2) return NULL;
+        int mid;
+        for(mid=l2;mid<=r2;mid++)
+            if(in_order[mid]==pre_order[l1]) break;
+        int len1=mid-l2;
+        TreeNode *node=new TreeNode(pre_order[l1]);
+        node->left=traversal(l1+1,l1+len1,l2,mid-1);
+        node->right=traversal(l1+len1+1,r1,mid+1,r2);
+        return node;
+    }
+    TreeNode* buildTree(vector<int>& preorder, vector<int>& inorder) {
+        pre_order=preorder,in_order=inorder;
+        int l1=0,r1=preorder.size()-1,l2=0,r2=inorder.size()-1;
+        TreeNode *root=traversal(l1,r1,l2,r2);
+        return root;
+    }
+};
+```
+
+### 解法2：递归+分治（map容器优化）
+
+$$
+O(n)+O(n)
+$$
+
+```C++
+/**
+ * Definition for a binary tree node.
+ * struct TreeNode {
+ *     int val;
+ *     TreeNode *left;
+ *     TreeNode *right;
+ *     TreeNode() : val(0), left(nullptr), right(nullptr) {}
+ *     TreeNode(int x) : val(x), left(nullptr), right(nullptr) {}
+ *     TreeNode(int x, TreeNode *left, TreeNode *right) : val(x), left(left), right(right) {}
+ * };
+ */
+class Solution {
+public:
+    vector<int> pre_order,in_order;
+    map<int,int> index;
+    TreeNode* traversal(int l1,int r1,int l2,int r2)
+    {
+        if(l1>r1||l2>r2) return NULL;
+        int mid=index[pre_order[l1]];
+        int len1=mid-l2;
+        TreeNode *node=new TreeNode(pre_order[l1]);
+        node->left=traversal(l1+1,l1+len1,l2,mid-1);
+        node->right=traversal(l1+len1+1,r1,mid+1,r2);
+        return node;
+    }
+    TreeNode* buildTree(vector<int>& preorder, vector<int>& inorder) {
+        pre_order=preorder,in_order=inorder;
+        for(int i=0;i<inorder.size();i++) index[inorder[i]]=i;
+        int l1=0,r1=preorder.size()-1,l2=0,r2=inorder.size()-1;
+        TreeNode *root=traversal(l1,r1,l2,r2);
+        return root;
+    }
+};
+```
+
+## [114. 二叉树展开为链表](https://leetcode.cn/problems/flatten-binary-tree-to-linked-list/)
+
+### 解法1：前序遍历（递归）
+
+$$
+O(n)+O(n)
+$$
+
+```C++
+/**
+ * Definition for a binary tree node.
+ * struct TreeNode {
+ *     int val;
+ *     TreeNode *left;
+ *     TreeNode *right;
+ *     TreeNode() : val(0), left(nullptr), right(nullptr) {}
+ *     TreeNode(int x) : val(x), left(nullptr), right(nullptr) {}
+ *     TreeNode(int x, TreeNode *left, TreeNode *right) : val(x), left(left), right(right) {}
+ * };
+ */
+class Solution {
+public:
+    vector<TreeNode*> vec;
+    void traversal(TreeNode* node){
+        if(node==NULL) return;
+        vec.push_back(node);
+        traversal(node->left);
+        traversal(node->right);
+    }
+    void flatten(TreeNode* root) {
+        if(root==NULL) return;
+        traversal(root);
+        for(int i=0;i<vec.size()-1;i++){
+            vec[i]->left=NULL;
+            vec[i]->right=vec[i+1];
+        }
+    }
+};
+```
+
+### 前序遍历（迭代）
+
+$$
+O(n)+O(n)
+$$
+
+```C++
+/**
+ * Definition for a binary tree node.
+ * struct TreeNode {
+ *     int val;
+ *     TreeNode *left;
+ *     TreeNode *right;
+ *     TreeNode() : val(0), left(nullptr), right(nullptr) {}
+ *     TreeNode(int x) : val(x), left(nullptr), right(nullptr) {}
+ *     TreeNode(int x, TreeNode *left, TreeNode *right) : val(x), left(left), right(right) {}
+ * };
+ */
+class Solution {
+public:
+    void flatten(TreeNode* root) {
+        if(root==NULL) return;
+        stack<TreeNode*> st;
+        vector<TreeNode*> vec;
+        TreeNode* node=root;
+        while(node||!st.empty()){
+            if(node){
+                st.push(node);
+                vec.push_back(node);
+                node=node->left;
+            }
+            else{
+                node=st.top();
+                st.pop();
+                node=node->right;
+            }
+        }
+        for(int i=0;i<vec.size()-1;i++){
+            vec[i]->left=NULL;
+            vec[i]->right=vec[i+1];
+        }
+    }
+};
+```
+
+## [121. 买卖股票的最佳时机](https://leetcode.cn/problems/best-time-to-buy-and-sell-stock/)
+
+### 解法1：动态规划
+
+$$
+O(n)+O(n)
+$$
+
+```C++
+class Solution {
+public:
+    int maxProfit(vector<int>& prices) {
+        vector<vector<int>> dp(prices.size(),vector<int>(2,0));
+        dp[0][0]=-prices[0],dp[0][1]=0;
+        for(int i=1;i<prices.size();i++){
+            dp[i][0]=max(dp[i-1][0],-prices[i]);
+            dp[i][1]=max(dp[i-1][1],dp[i][0]+prices[i]);
+        }
+        return dp[prices.size()-1][1];
+    }
+};
+```
+
+### 解法2：贪心
+
+$$
+O(n)+O(1)
+$$
+
+```C++
+class Solution {
+public:
+    int maxProfit(vector<int>& prices) {
+        int minPrice=prices[0],result=0;
+        for(int i=0;i<prices.size();i++){
+            result=max(result,prices[i]-minPrice);
+            minPrice=min(minPrice,prices[i]);
+        }
+        return result;
+    }
+};
+```
+
+## [124. 二叉树中的最大路径和](https://leetcode.cn/problems/binary-tree-maximum-path-sum/)
+
+### 解法1：递归
+
+$$
+O(n)+O(n)
+$$
+
+```C++
+/**
+ * Definition for a binary tree node.
+ * struct TreeNode {
+ *     int val;
+ *     TreeNode *left;
+ *     TreeNode *right;
+ *     TreeNode() : val(0), left(nullptr), right(nullptr) {}
+ *     TreeNode(int x) : val(x), left(nullptr), right(nullptr) {}
+ *     TreeNode(int x, TreeNode *left, TreeNode *right) : val(x), left(left), right(right) {}
+ * };
+ */
+class Solution {
+public:
+    void traversal(TreeNode* node,int& sum1,int& sum2){
+        int leftSum1=INT_MIN/3,leftSum2=INT_MIN/3;
+        if(node->left) traversal(node->left,leftSum1,leftSum2);
+        int rightSum1=INT_MIN/3,rightSum2=INT_MIN/3;
+        if(node->right) traversal(node->right,rightSum1,rightSum2);
+        sum1=max(node->val,max(node->val+leftSum1,node->val+rightSum1));
+        sum2=max(node->val+leftSum1+rightSum1,max(max(leftSum1,leftSum2),max(rightSum1,rightSum2)));
+    }
+    int maxPathSum(TreeNode* root) {
+        if(root==NULL) return 0;
+        int sum1=INT_MIN/3,sum2=INT_MIN/3;
+        traversal(root,sum1,sum2);
+        return max(sum1,sum2);
+    }
+};
+```
+
+## [128. 最长连续序列](https://leetcode.cn/problems/longest-consecutive-sequence/)
+
+### 解法1：哈希
+
+$$
+O(n)+O(n)
+$$
+
+```C++
+class Solution {
+public:
+    int longestConsecutive(vector<int>& nums) {
+        unordered_map<int,int> map;//0表示没这个数，1表示有这个数，2表示已经被访问过
+        int maxLength=0;
+        for(int i=0;i<nums.size();i++){//标记出现过的数字
+            map[nums[i]]=1;
+        }
+        for(int i=0;i<nums.size();i++){
+            if(map[nums[i]]==2) continue;//已经访问过，跳过
+            int length=1;
+            map[nums[i]]=2;//标记访问
+            for(int j=1;map[nums[i]-j]==1;j++){//向前扫描
+                map[nums[i]-j]=2;
+                length++;
+            }
+            for(int j=1;map[nums[i]+j]==1;j++){//向后扫描
+                map[nums[i]+j]=2;
+                length++;
+            }
+            maxLength=max(maxLength,length);
+        }
+        return maxLength;
+    }
+};
+```
+
+## [136. 只出现一次的数字](https://leetcode.cn/problems/single-number/)
+
+### 解法1：异或
+
+$$
+O(n)+O(1)
+$$
+
+```C++
+class Solution {
+public:
+    int singleNumber(vector<int>& nums) {
+        int result=0;
+        for(int i=0;i<nums.size();i++) result^=nums[i];
+        return result;
+    }
+};
+```
 
