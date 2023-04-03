@@ -2273,3 +2273,492 @@ public:
 };
 ```
 
+## [139. 单词拆分](https://leetcode.cn/problems/word-break/)
+
+### 解法1：动态规划
+
+$$
+O(mn)+O(n)
+$$
+
+```C++
+class Solution {
+public:
+    bool wordBreak(string s, vector<string>& wordDict) {
+        unordered_set<string> wordSet(wordDict.begin(),wordDict.end());
+        vector<bool> dp(s.length()+1,false);
+        dp[0]=true;
+        for(int i=1;i<=s.length();i++)
+            for(int j=0;j<wordDict.size();j++)
+                if(i>=wordDict[j].length()){
+                    string str=s.substr(i-wordDict[j].length(),wordDict[j].length());
+                    if(dp[i-wordDict[j].length()]==true&&wordSet.find(str)!=wordSet.end())
+                        dp[i]=true;
+                }
+        return dp[s.length()];
+    }
+};
+```
+
+## [141. 环形链表](https://leetcode.cn/problems/linked-list-cycle/)
+
+### 解法1：快慢指针
+
+$$
+O(n)+O(1)
+$$
+
+```c++
+/**
+ * Definition for singly-linked list.
+ * struct ListNode {
+ *     int val;
+ *     ListNode *next;
+ *     ListNode(int x) : val(x), next(NULL) {}
+ * };
+ */
+class Solution {
+public:
+    bool hasCycle(ListNode *head) {
+        if(head==NULL||head->next==NULL) return false;
+        ListNode *p=head,*q=head->next;
+        while(q!=NULL&&q->next!=NULL){
+            if(p==q) break;
+            p=p->next;
+            q=q->next->next;
+        }
+        if(q==NULL||q->next==NULL) return false;
+        else return true;
+    }
+};
+```
+
+## [142. 环形链表 II](https://leetcode.cn/problems/linked-list-cycle-ii/)
+
+### 解法1：快慢指针
+
+$$
+O(n)+O(1)
+$$
+
+```C++
+/**
+ * Definition for singly-linked list.
+ * struct ListNode {
+ *     int val;
+ *     ListNode *next;
+ *     ListNode(int x) : val(x), next(NULL) {}
+ * };
+ */
+class Solution {
+public:
+    ListNode *detectCycle(ListNode *head) {
+        ListNode *p=head,*q=head;
+        while(q!=NULL&&q->next!=NULL){
+            p=p->next;
+            q=q->next->next;
+            if(p==q){
+                p=head;
+                while(p!=q) p=p->next,q=q->next;
+                return p;
+            }
+        }
+        return NULL;
+    }
+};
+```
+
+## [146. LRU 缓存](https://leetcode.cn/problems/lru-cache/)（==待做==）
+
+## [148. 排序链表](https://leetcode.cn/problems/sort-list/)（==待做==）
+
+## ==[152. 乘积最大子数组](https://leetcode.cn/problems/maximum-product-subarray/)==
+
+### 解法1：动态规划
+
+$$
+O(n)+O(n)
+$$
+
+```C++
+```
+
+### ==笔记==
+
+是不是连续子序列，动态规划数组的意义都是“取以当前位置为结尾得到的最优结果”？
+
+## [155. 最小栈](https://leetcode.cn/problems/min-stack/)
+
+### 解法1：栈
+
+$$
+略
+$$
+
+```C++
+class MinStack {
+    stack<int> st,min_st;
+public:
+    MinStack() {
+        while(!st.empty()) st.pop();
+        while(!min_st.empty()) min_st.pop();
+    }
+    
+    void push(int val) {
+        st.push(val);
+        if(min_st.empty()||val<=min_st.top()) min_st.push(val);
+    }
+    
+    void pop() {
+        if(!min_st.empty()&&st.top()==min_st.top()) min_st.pop();
+        if(!st.empty()) st.pop();
+    }
+    
+    int top() {
+        if(!st.empty()) return st.top();
+        return -1;
+    }
+    
+    int getMin() {
+        if(!min_st.empty()) return min_st.top();
+        return -1;
+    }
+};
+
+/**
+ * Your MinStack object will be instantiated and called as such:
+ * MinStack* obj = new MinStack();
+ * obj->push(val);
+ * obj->pop();
+ * int param_3 = obj->top();
+ * int param_4 = obj->getMin();
+ */
+```
+
+## [160. 相交链表](https://leetcode.cn/problems/intersection-of-two-linked-lists/)
+
+### 解法1：快慢指针
+
+$$
+O(n)+O(1)
+$$
+
+```C++
+/**
+ * Definition for singly-linked list.
+ * struct ListNode {
+ *     int val;
+ *     ListNode *next;
+ *     ListNode(int x) : val(x), next(NULL) {}
+ * };
+ */
+class Solution {
+public:
+    ListNode *getIntersectionNode(ListNode *headA, ListNode *headB) {
+        ListNode *p=headA,*q=headB;
+        int m=0,n=0;
+        while(p!=NULL) p=p->next,m++;
+        while(q!=NULL) q=q->next,n++;
+        int k;
+        if(m>=n) p=headA,q=headB,k=m-n;
+        else p=headB,q=headA,k=n-m;
+        while(k--) p=p->next;
+        while(p!=q) p=p->next,q=q->next;
+        if(p!=NULL) return p;
+        else return NULL;
+    }
+};
+```
+
+## [169. 多数元素](https://leetcode.cn/problems/majority-element/)
+
+### 解法1：摩尔投票
+
+$$
+O(n)+O(1)
+$$
+
+```C++
+class Solution {
+public:
+    int majorityElement(vector<int>& nums) {
+        int result=nums[0],count=1;
+        for(int i=1;i<nums.size();i++){
+            if(count==0) result=nums[i];
+            if(result==nums[i]) count++;
+            else count--;
+        }
+        return result;
+    }
+};
+```
+
+## [198. 打家劫舍](https://leetcode.cn/problems/house-robber/)
+
+### 解法1：动态规划
+
+$$
+O(n)+O(n)
+$$
+
+```C++
+class Solution {
+public:
+    int rob(vector<int>& nums) {
+        if(nums.size()==1) return nums[0];
+        vector<int> dp(nums.size(),0);
+        dp[0]=nums[0],dp[1]=max(nums[0],nums[1]);
+        for(int i=2;i<nums.size();i++)
+            dp[i]=max(dp[i-1],dp[i-2]+nums[i]);
+        return dp[nums.size()-1];
+    }
+};
+```
+
+## [200. 岛屿数量](https://leetcode.cn/problems/number-of-islands/)
+
+### 解法1：BFS
+
+$$
+O(mn)+O(1)
+$$
+
+```C++
+class Solution {
+public:
+    int m,n;
+    void BFS(int i,int j,vector<vector<char>>& grid){
+        grid[i][j]='0';
+        int dx[4]={0,1,0,-1};
+        int dy[4]={1,0,-1,0};
+        for(int k=0;k<4;k++){
+            int x=i+dx[k],y=j+dy[k];
+            if(x>=0&&x<m&&y>=0&&y<n&&grid[x][y]=='1') BFS(x,y,grid);
+        }
+    }
+    int numIslands(vector<vector<char>>& grid) {
+        int count=0;
+        m=grid.size(),n=grid[0].size();
+        for(int i=0;i<m;i++){
+            for(int j=0;j<n;j++){
+                if(grid[i][j]=='1'){
+                    BFS(i,j,grid);
+                    count++;
+                }
+            }
+        }
+        return count;
+    }
+};
+```
+
+## [206. 反转链表](https://leetcode.cn/problems/reverse-linked-list/)
+
+### 解法1：头插法
+
+$$
+O(n)+O(1)
+$$
+
+```C++
+/**
+ * Definition for singly-linked list.
+ * struct ListNode {
+ *     int val;
+ *     ListNode *next;
+ *     ListNode() : val(0), next(nullptr) {}
+ *     ListNode(int x) : val(x), next(nullptr) {}
+ *     ListNode(int x, ListNode *next) : val(x), next(next) {}
+ * };
+ */
+class Solution {
+public:
+    ListNode* reverseList(ListNode* head) {
+        ListNode* dummyHead1=new ListNode(),*dummyHead2=new ListNode();
+        dummyHead1->next=head;
+        ListNode* p=head;
+        while(p!=NULL){
+            dummyHead1->next=p->next;
+            p->next=dummyHead2->next;
+            dummyHead2->next=p;
+            p=dummyHead1->next;
+        }
+
+        return dummyHead2->next;
+    }
+};
+```
+
+## [207. 课程表](https://leetcode.cn/problems/course-schedule/)（==待做==）
+
+### 解法1
+
+
+
+### ==笔记：`map`容器排序==
+
+#### 1.默认情况
+
+从小大大排序
+
+#### 2.让map中的元素按照key从大到小排序
+
+```C++
+#include <map>
+#include <string>
+#include <iostream>
+using namespace std;
+int main(){
+    map<string, int, greater<string> > mapStudent;  //关键是这句话
+    mapStudent["LiMin"]=90;
+    mapStudent["ZiLinMi"]=72;
+    mapStudent["BoB"]=79;
+    map<string, int>::iterator iter=mapStudent.begin();
+    for(iter=mapStudent.begin();iter!=mapStudent.end();iter++)
+    {
+        cout<<iter->first<<" "<<iter->second<<endl;
+    }
+    return 0;
+}
+```
+
+运行结果
+
+```C++
+[root@localhost charpter03]# g++ 0327.cpp -o 0327
+[root@localhost charpter03]# ./0327
+ZiLinMi 72
+LiMin 90
+BoB 79
+```
+
+#### 3.重定义map内部的Compare函数，按照键字符串长度大小进行排序
+
+```C++
+#include <map>
+#include <string>
+#include <iostream>
+using namespace std;
+// 自己编写的Compare，实现按照字符串长度进行排序
+struct CmpByKeyLength {
+    bool operator()(const string& k1, const string& k2) {  
+    return k1.length() < k2.length();  
+  }  
+};  
+int main(){
+    map<string, int, CmpByKeyLength > mapStudent;  //这里注意要换成自己定义的compare
+    mapStudent["LiMin"]=90;
+    mapStudent["ZiLinMi"]=72;
+    mapStudent["BoB"]=79;
+    map<string, int>::iterator iter=mapStudent.begin();
+    for(iter=mapStudent.begin();iter!=mapStudent.end();iter++){
+        cout<<iter->first<<" "<<iter->second<<endl;
+    }
+    return 0;
+}
+```
+
+运行结果
+
+```C++
+[root@localhost charpter03]# g++ 0328.cpp -o 0328
+[root@localhost charpter03]# ./0328
+BoB 79
+LiMin 90
+ZiLinMi 72
+```
+
+#### 4.key是结构体的排序
+
+```C++
+#include <map>
+#include <string>
+#include <iostream>
+using namespace std;
+typedef struct tagStudentInfo  
+{  
+    int iID;  
+    string  strName;  
+    bool operator < (tagStudentInfo const& r) const {  
+        //这个函数指定排序策略，按iID排序，如果iID相等的话，按strName排序  
+        if(iID < r.iID)  return true;  
+        if(iID == r.iID) return strName.compare(r.strName) < 0;  
+        return false;
+    }  
+}StudentInfo;//学生信息
+int main(){
+    /*用学生信息映射分数*/  
+    map<StudentInfo, int>mapStudent;  
+    StudentInfo studentInfo;  
+    studentInfo.iID = 1;  
+    studentInfo.strName = "student_one";  
+    mapStudent[studentInfo]=90;
+    studentInfo.iID = 2;  
+    studentInfo.strName = "student_two";
+    mapStudent[studentInfo]=80;
+    map<StudentInfo, int>::iterator iter=mapStudent.begin();
+    for(;iter!=mapStudent.end();iter++){
+        cout<<iter->first.iID<<" "<<iter->first.strName<<" "<<iter->second<<endl;
+    }
+    return 0;
+}
+```
+
+运行结果
+
+```C++
+[root@localhost charpter03]# g++ 0329.cpp -o 0329
+[root@localhost charpter03]# ./0329
+1 student_one 90
+2 student_two 80
+```
+
+#### 5.将map按value排序
+
+```C++
+#include <algorithm>
+#include <map>
+#include <vector>
+#include <string>
+#include <iostream>
+using namespace std;
+typedef pair<string, int> PAIR;   
+bool cmp_by_value(const PAIR& lhs, const PAIR& rhs) {  
+  return lhs.second < rhs.second;  
+}  
+struct CmpByValue {  
+  bool operator()(const PAIR& lhs, const PAIR& rhs) {  
+    return lhs.second < rhs.second;  
+  }  
+};
+int main(){  
+  map<string, int> name_score_map;  
+  name_score_map["LiMin"] = 90;  
+  name_score_map["ZiLinMi"] = 79;  
+  name_score_map["BoB"] = 92;  
+  name_score_map.insert(make_pair("Bing",99));  
+  name_score_map.insert(make_pair("Albert",86));  
+  /*把map中元素转存到vector中*/   
+  vector<PAIR> name_score_vec(name_score_map.begin(), name_score_map.end());  
+  sort(name_score_vec.begin(), name_score_vec.end(), CmpByValue());  
+  /*sort(name_score_vec.begin(), name_score_vec.end(), cmp_by_value);也是可以的*/
+  for (int i = 0; i != name_score_vec.size(); ++i) {  
+    cout<<name_score_vec[i].first<<" "<<name_score_vec[i].second<<endl;  
+  }  
+  return 0;  
+}  
+```
+
+运行结果
+
+```C++
+[root@localhost charpter03]# g++ 0330.cpp -o 0330
+[root@localhost charpter03]# ./0330
+ZiLinMi 79
+Albert 86
+LiMin 90
+BoB 92
+Bing 99
+```
+
+## [208. 实现 Trie (前缀树)](https://leetcode.cn/problems/implement-trie-prefix-tree/)（==待做==）
