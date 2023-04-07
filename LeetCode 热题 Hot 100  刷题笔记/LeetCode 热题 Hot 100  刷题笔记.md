@@ -2368,9 +2368,234 @@ public:
 };
 ```
 
-## [146. LRU 缓存](https://leetcode.cn/problems/lru-cache/)（==待做==）
+## [146. LRU 缓存](https://leetcode.cn/problems/lru-cache/)
 
-## [148. 排序链表](https://leetcode.cn/problems/sort-list/)（==待做==）
+### 解法1：哈希+双链表
+
+$$
+O(1)+O(n)
+$$
+
+```C++
+struct DLinkedNode {
+    int key, value;
+    DLinkedNode* prev;
+    DLinkedNode* next;
+    DLinkedNode(): key(0), value(0), prev(nullptr), next(nullptr) {}
+    DLinkedNode(int _key, int _value): key(_key), value(_value), prev(nullptr), next(nullptr) {}
+};
+
+class LRUCache {
+public:
+    unordered_map<int, DLinkedNode*> cache;
+    DLinkedNode* dummyHead,* dummyTail;
+    int size,capacity;
+    LRUCache(int capacity) {
+        dummyHead = new DLinkedNode();
+        dummyTail = new DLinkedNode();
+        dummyHead->next = dummyTail;
+        dummyTail->prev = dummyHead;
+        size = 0;
+        this->capacity = capacity;
+    }
+    
+    int get(int key) {
+        if (cache.count(key) == 0){
+            return -1;
+        }
+        DLinkedNode* node = cache[key];
+        moveToHead(node);
+        return node->value;
+    }
+    
+    void put(int key, int value) {
+        if (cache.count(key) != 0){
+            DLinkedNode* node = cache[key];
+            node->value = value;
+            moveToHead(node);
+        }
+        else{
+            size++;
+            DLinkedNode* node = new DLinkedNode(key, value);
+            cache[key] = node;
+            addToHead(node);
+            if(size > capacity){
+                DLinkedNode* removed = removeTail();
+                cache.erase(removed->key);//map中的erase
+                size--;
+            }
+        }
+    }
+
+    void addToHead(DLinkedNode* node) {
+        node->prev = dummyHead;
+        node->next = dummyHead->next;
+        dummyHead->next->prev = node;
+        dummyHead->next = node;
+    }
+    
+    void removeNode(DLinkedNode* node) {
+        node->prev->next = node->next;
+        node->next->prev = node->prev;
+    }
+
+    void moveToHead(DLinkedNode* node) {
+        removeNode(node);
+        addToHead(node);
+    }
+
+    DLinkedNode* removeTail() {
+        DLinkedNode* node = dummyTail->prev;
+        removeNode(node);
+        return node;
+    }
+};
+
+/**
+ * Your LRUCache object will be instantiated and called as such:
+ * LRUCache* obj = new LRUCache(capacity);
+ * int param_1 = obj->get(key);
+ * obj->put(key,value);
+ */
+```
+
+## [148. 排序链表](https://leetcode.cn/problems/sort-list/)
+
+### 解法1：归并排序（自顶向下）
+
+$$
+O(n\log n)+O(\log n)
+$$
+
+```C++
+/**
+ * Definition for singly-linked list.
+ * struct ListNode {
+ *     int val;
+ *     ListNode *next;
+ *     ListNode() : val(0), next(nullptr) {}
+ *     ListNode(int x) : val(x), next(nullptr) {}
+ *     ListNode(int x, ListNode *next) : val(x), next(next) {}
+ * };
+ */
+class Solution {
+public:
+    ListNode* sortList(ListNode* head){
+        if (head == NULL || head->next == NULL) {
+            return head;
+        }
+        ListNode* slow = head, * fast = head;
+        while (fast->next != NULL && fast->next->next != NULL) {
+        //这个条件不能写成 while (fast != NULL && fast->next != NULL)
+            slow = slow->next;
+            fast = fast->next->next;
+        }
+        fast = slow->next, slow->next = NULL;
+        return merge(sortList(head), sortList(fast));
+    }
+
+    ListNode* merge(ListNode* head1, ListNode* head2){
+        ListNode* dummyHead = new ListNode(), * p = dummyHead;
+        ListNode* p1 = head1, * p2 = head2;
+        while (p1 && p2) {
+            if (p1->val < p2->val) {
+                p->next = p1;
+                p1 = p1->next;
+            }
+            else {
+                p->next = p2;
+                p2 = p2->next;
+            }
+            p = p->next;
+        }
+        p->next = p1 ? p1 : p2;
+        return dummyHead->next;
+    }
+};
+```
+
+### 解法2：归并排序（自底向上）
+
+$$
+O(n\log n)+O(1)
+$$
+
+```C++
+/**
+ * Definition for singly-linked list.
+ * struct ListNode {
+ *     int val;
+ *     ListNode *next;
+ *     ListNode() : val(0), next(nullptr) {}
+ *     ListNode(int x) : val(x), next(nullptr) {}
+ *     ListNode(int x, ListNode *next) : val(x), next(next) {}
+ * };
+ */
+class Solution {
+public:
+    ListNode* sortList(ListNode* head){
+        if (head == NULL || head->next == NULL) {
+            return head;
+        }
+        ListNode* dummyHead = new ListNode();
+        dummyHead->next = head;
+        ListNode* node = head;
+        int length = 0;//统计链表长度
+        while (node) {
+            length++;
+            node = node->next;
+        }
+        for (int subLength = 1; subLength < length; subLength <<= 1){//自底向上，每一轮归并的长度逐渐变长
+            ListNode* pre = dummyHead, * cur = dummyHead->next;//pre存储前一次归并的结果，cur为当前要处理的一段链表
+            while (cur) {//每次取两段链表归并
+                //取出第一段链表
+                ListNode* head1;
+                head1 = cur;
+                for (int i = 1; i < subLength && cur->next; i++) {//"cur->next"作为判断条件是为了让head2至少有一个结点
+                    cur = cur->next;
+                }
+                //取出第二段链表
+                ListNode* head2;
+                head2 = cur->next;
+                cur->next = NULL;//断链
+                cur = head2;
+                for (int i = 1; i < subLength && cur; i++) {//"cur"作为判断条件
+                    cur = cur->next;
+                }
+                ListNode* next = NULL;//next用于记录取出两段链表后剩下的那段（用于下一次处理），避免锻炼
+                if (cur){
+                    next = cur->next;
+                    cur->next = NULL;//断链
+                }
+                cur = next;
+                ListNode* merged = merge(head1, head2);
+                pre->next = merged;//将两段归并后的链表连在pre后面
+                for (pre = merged; pre->next; pre = pre->next);//pre移动到新链表的末尾
+            }
+        }
+        return dummyHead->next;
+    }
+
+    //merge函数和解法1完全一致
+    ListNode* merge(ListNode* head1, ListNode* head2){
+        ListNode* dummyHead = new ListNode(), * p = dummyHead;
+        ListNode* p1 = head1, * p2 = head2;
+        while (p1 && p2) {
+            if (p1->val < p2->val) {
+                p->next = p1;
+                p1 = p1->next;
+            }
+            else {
+                p->next = p2;
+                p2 = p2->next;
+            }
+            p = p->next;
+        }
+        p->next = p1 ? p1 : p2;
+        return dummyHead->next;
+    }
+};
+```
 
 ## ==[152. 乘积最大子数组](https://leetcode.cn/problems/maximum-product-subarray/)==
 
@@ -2381,6 +2606,20 @@ O(n)+O(n)
 $$
 
 ```C++
+class Solution {
+public:
+    int maxProduct(vector<int>& nums) {
+        vector<int> minDp(nums.size()),maxDp(nums.size());
+        minDp[0]=maxDp[0]=nums[0];
+        int result=nums[0];
+        for(int i=1;i<nums.size();i++){
+            minDp[i]=min(nums[i],min(minDp[i-1]*nums[i],maxDp[i-1]*nums[i]));
+            maxDp[i]=max(nums[i],max(minDp[i-1]*nums[i],maxDp[i-1]*nums[i]));
+            result=max(result,maxDp[i]);
+        }
+        return result;
+    }
+};
 ```
 
 ### ==笔记==
@@ -2589,11 +2828,51 @@ public:
 };
 ```
 
-## [207. 课程表](https://leetcode.cn/problems/course-schedule/)（==待做==）
+## ==[207. 课程表](https://leetcode.cn/problems/course-schedule/)==
 
-### 解法1
+### 解法1：拓扑排序
 
+$$
+O(m+n)+O(m+n)
+$$
 
+```C++
+class Solution {
+public:
+    bool canFinish(int numCourses, vector<vector<int>>& prerequisites) {
+        vector<int> inDegree(numCourses, 0);
+        unordered_map<int, vector<int>> graph;
+        for (int i = 0; i < prerequisites.size(); i++) {
+            inDegree[prerequisites[i][0]]++;
+            graph[prerequisites[i][1]].push_back(prerequisites[i][0]);
+        }
+        queue<int> que;
+        int count = 0;
+        for (int i = 0; i < numCourses; i++) {
+            if (inDegree[i] == 0) {
+                que.push(i);
+                count++;
+            }
+        }
+        while (!que.empty()) {
+            int node = que.front();
+            que.pop();
+            for (int i = 0; i < graph[node].size(); i++) {
+                if (--inDegree[graph[node][i]] == 0) {
+                    que.push(graph[node][i]);
+                    count++;
+                }
+            }
+        }
+        if (count == numCourses) {
+            return true;
+        }
+        else {
+            return false;
+        }
+    }
+};
+```
 
 ### ==笔记：`map`容器排序==
 
@@ -2761,4 +3040,175 @@ BoB 92
 Bing 99
 ```
 
-## [208. 实现 Trie (前缀树)](https://leetcode.cn/problems/implement-trie-prefix-tree/)（==待做==）
+## ==[208. 实现 Trie (前缀树)](https://leetcode.cn/problems/implement-trie-prefix-tree/)==
+
+### 解法1：Trie树
+
+$$
+时间复杂度：初始化为O(1)，其余操作为O(|S|)，其中|S|是每次插入或查询的字符串的长度。
+$$
+$$
+空间复杂度：O(|T|⋅Σ)，其中∣T∣为所有插入字符串的长度之和，Σ为字符集的大小，本题Σ=26。
+$$
+
+```C++
+class Trie {
+private:
+    bool isEnd;
+    Trie* next[26];
+public:
+    Trie() {
+        isEnd = false;
+        memset(next, 0, sizeof(next));
+    }
+    
+    void insert(string word) {
+        Trie* node = this;
+        for (char c : word) {
+            if (node->next[c - 'a'] == NULL) {
+                node->next[c - 'a'] = new Trie();
+            }
+            node = node->next[c-'a'];
+        }
+        node->isEnd = true;
+    }
+    
+    bool search(string word) {
+        Trie* node = this;
+        for (char c : word) {
+            node = node->next[c - 'a'];
+            if (node == NULL) {
+                return false;
+            }
+        }
+        return node->isEnd;
+    }
+    
+    bool startsWith(string prefix) {
+        Trie* node = this;
+        for (char c : prefix) {
+            node = node->next[c-'a'];
+            if (node == NULL) {
+                return false;
+            }
+        }
+        return true;
+    }
+};
+
+/**
+ * Your Trie object will be instantiated and called as such:
+ * Trie* obj = new Trie();
+ * obj->insert(word);
+ * bool param_2 = obj->search(word);
+ * bool param_3 = obj->startsWith(prefix);
+ */
+```
+
+## [215. 数组中的第K个最大元素](https://leetcode.cn/problems/kth-largest-element-in-an-array/)
+
+### 解法1：快速排序
+
+$$
+O(n)+O(\log n)
+$$
+
+```C++
+class Solution {
+public:
+    void quicksort(vector<int>& nums,int l,int r,int k){
+        if(l>=r) return;
+        int i=l-1,j=r+1,x=nums[l+r>>1];
+        while(i<j){
+            while(nums[++i]<x);
+            while(nums[--j]>x);
+            if(i<j) swap(nums[i],nums[j]);
+        }
+        if(j>=nums.size()-k) quicksort(nums,l,j,k);
+        else quicksort(nums,j+1,r,k);
+    }
+    int findKthLargest(vector<int>& nums, int k) {
+        quicksort(nums,0,nums.size()-1,k);
+        return nums[nums.size()-k];
+    }
+};
+```
+
+# 以下待做
+
+## [221. 最大正方形](https://leetcode.cn/problems/maximal-square/)
+
+## [226. 翻转二叉树](https://leetcode.cn/problems/invert-binary-tree/)
+
+## [234. 回文链表](https://leetcode.cn/problems/palindrome-linked-list/)
+
+## [236. 二叉树的最近公共祖先](https://leetcode.cn/problems/lowest-common-ancestor-of-a-binary-tree/)
+
+## [238. 除自身以外数组的乘积](https://leetcode.cn/problems/product-of-array-except-self/)
+
+## [239. 滑动窗口最大值](https://leetcode.cn/problems/sliding-window-maximum/)
+
+## [240. 搜索二维矩阵 II](https://leetcode.cn/problems/search-a-2d-matrix-ii/)
+
+## [253.会议室II](https://leetcode.cn/problems/meeting-rooms-ii/?favorite=2cktkvj)（==Plus会员题==）
+
+## [279. 完全平方数](https://leetcode.cn/problems/perfect-squares/)
+
+## [283. 移动零](https://leetcode.cn/problems/move-zeroes/)
+
+## [287. 寻找重复数](https://leetcode.cn/problems/find-the-duplicate-number/)
+
+## [297. 二叉树的序列化与反序列化](https://leetcode.cn/problems/serialize-and-deserialize-binary-tree/)
+
+## [300. 最长递增子序列](https://leetcode.cn/problems/longest-increasing-subsequence/)
+
+## [301. 删除无效的括号](https://leetcode.cn/problems/remove-invalid-parentheses/)
+
+## [309. 最佳买卖股票时机含冷冻期](https://leetcode.cn/problems/best-time-to-buy-and-sell-stock-with-cooldown/)
+
+## [312. 戳气球](https://leetcode.cn/problems/burst-balloons/)
+
+## [322. 零钱兑换](https://leetcode.cn/problems/coin-change/)
+
+## [337. 打家劫舍 III](https://leetcode.cn/problems/house-robber-iii/)
+
+## [338. 比特位计数](https://leetcode.cn/problems/counting-bits/)
+
+## [347. 前 K 个高频元素](https://leetcode.cn/problems/top-k-frequent-elements/)
+
+## [394. 字符串解码](https://leetcode.cn/problems/decode-string/)
+
+## [399. 除法求值](https://leetcode.cn/problems/evaluate-division/)
+
+## [406. 根据身高重建队列](https://leetcode.cn/problems/queue-reconstruction-by-height/)
+
+## [416. 分割等和子集](https://leetcode.cn/problems/partition-equal-subset-sum/)
+
+## [437. 路径总和 III](https://leetcode.cn/problems/path-sum-iii/)
+
+## [438. 找到字符串中所有字母异位词](https://leetcode.cn/problems/find-all-anagrams-in-a-string/)
+
+## [448. 找到所有数组中消失的数字](https://leetcode.cn/problems/find-all-numbers-disappeared-in-an-array/)
+
+## [461. 汉明距离](https://leetcode.cn/problems/hamming-distance/)
+
+## [494. 目标和](https://leetcode.cn/problems/target-sum/)
+
+## [538. 把二叉搜索树转换为累加树](https://leetcode.cn/problems/convert-bst-to-greater-tree/)
+
+## [543. 二叉树的直径](https://leetcode.cn/problems/diameter-of-binary-tree/)
+
+## [560. 和为 K 的子数组](https://leetcode.cn/problems/subarray-sum-equals-k/)
+
+## [581. 最短无序连续子数组](https://leetcode.cn/problems/shortest-unsorted-continuous-subarray/)
+
+## [617. 合并二叉树](https://leetcode.cn/problems/merge-two-binary-trees/)
+
+## [621. 任务调度器](https://leetcode.cn/problems/task-scheduler/)
+
+## [647. 回文子串](https://leetcode.cn/problems/palindromic-substrings/)
+
+## [739. 每日温度](https://leetcode.cn/problems/daily-temperatures/)
+
+
+
