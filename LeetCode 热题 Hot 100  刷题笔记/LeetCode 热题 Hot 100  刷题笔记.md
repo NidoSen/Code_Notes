@@ -127,34 +127,777 @@ $$
 class Solution {
 public:
     int maxArea(vector<int>& height) {
-        int left=0,right=height.size()-1;
-        int result=0;
-        while(left<right){
-            int area=min(height[left],height[right])*(right-left);
-            result=max(result,area);
-            if (height[left]<=height[right]) left++;
-            else right--;
+        int left = 0, right = height.size() - 1; //left和right初始化为左右两端
+        int maxArea = 0; //记录最大面积
+        while (left < right) {
+            int area = min(height[left], height[right]) * (right - left); //计算当前面积
+            maxArea = max(maxArea, area); //更新最大面积
+            if (height[left] <= height[right]) { //若左端较小，则右移left
+                left++;
+            }
+            else { //若右端较小，则左移right
+                right--;
+            }
+        }
+        return maxArea;
+    }
+};
+```
+
+## [15. 三数之和](https://leetcode.cn/problems/3sum/)
+
+### 解法1：排序+双指针
+
+$$
+O(n^2)+O(1)
+$$
+
+```C++
+class Solution {
+public:
+    vector<vector<int>> threeSum(vector<int>& nums) {
+        sort(nums.begin(), nums.end()); //排序，为后续操作做准备
+
+        vector<vector<int>> result; //记录结果
+        for(int i = 0; i <nums.size(); i++) {
+            if (nums[i] > 0) { //当前访问的数大于0，说明后续已不会再出现三数之和等于0，可以直接退出
+                break;
+            }
+            if (i > 0 && nums[i] == nums[i - 1]) { //避免重复
+                continue;
+            }
+            int j = i + 1, k = nums.size() - 1; //从i位后面的数中开始找与nums[i]相加,和为0的两个数
+            while (j < k) { //当j和k相等时，遍历结束
+                if (nums[i] + nums[j] + nums[k] == 0) { //三数之和为0
+                    result.push_back(vector<int>{nums[i], nums[j], nums[k]}); //记录到结果中
+                    j++, k--; //j后移，k前移
+                    while (j < k && nums[j] == nums[j - 1]) { //避免重复
+                        j++;
+                    }
+                    while (j < k && nums[k] == nums[k + 1]) { //避免重复
+                        k--;
+                    }
+                }
+                else if (j < k && nums[i] + nums[j] + nums[k] < 0) { //和太小，需要增大，j后移
+                    j++;
+                }
+                else { //和太大，需要减小，k前移
+                    k--;
+                }
+            }
+        }
+
+        return result;
+    }
+};
+```
+
+## ==[42. 接雨水](https://leetcode.cn/problems/trapping-rain-water/)==
+
+### 解法1：动态规划
+
+$$
+O(n)+O(n)
+$$
+
+```C++
+class Solution {
+public:
+    int trap(vector<int>& height) {
+        if (height.size() <= 2) { //柱子数量小于等于2个，无法接水
+            return 0;
+        }
+
+        vector<int> leftHeight = vector<int>(height.size(), 0); //记录当前位置及其左边的最高柱子
+        leftHeight[0] = height[0]; //初始化第一个位置及其左边的最高柱子为height[0]
+        for (int i = 1; i < height.size(); i++) {
+            leftHeight[i] = max(height[i], leftHeight[i - 1]);
+        }
+
+        vector<int> rightHeight = vector<int>(height.size(), 0); //记录当前位置及其右边的最高柱子
+        rightHeight[height.size() - 1] = height[height.size() - 1]; //初始化最后一个位置及其右边的最高柱子为height[height.size() - 1]
+        for (int i = height.size() - 2; i >= 0; i--) {
+            rightHeight[i] = max(height[i], rightHeight[i + 1]);
+        }
+
+        int sum = 0; //记录雨水量
+        for (int i = 0; i < height.size(); i++) {
+            sum += min(leftHeight[i], rightHeight[i]) - height[i]; //当前位置能接的雨水量等于当前位置左边的最高柱子和右边的最高柱子中的较矮的柱子，与当前位置柱子高度的差
+        }
+        return sum;
+    }
+};
+```
+
+### 解法2：单调栈
+
+$$
+O(n)+O(n)
+$$
+
+```C++
+class Solution {
+public:
+    int trap(vector<int>& height) {
+        stack<int> st; //单调栈，记录坐标
+        int sum = 0; //记录雨水量
+        for (int i = 0; i < height.size(); i++) {
+            while (!st.empty() && height[i] > height[st.top()]) { //出现凹槽，一直加水至凹槽不存在为止
+                int mid = st.top();
+                st.pop();
+                if (!st.empty()) {
+                    int h = min(height[i], height[st.top()]) - height[mid]; //水槽高度
+                    int w = i - st.top() - 1; //水槽宽度
+                    sum += h * w;
+                }
+            }
+            st.push(i); //坐标入栈
+        }
+        return sum;
+    }
+};
+```
+
+### 解法3：双指针
+
+$$
+O(n)+O(1)
+$$
+
+```C++
+class Solution {
+public:
+    int trap(vector<int>& height) {
+        int left = 0, right = height.size() - 1; //初始化左右指针位置
+        int leftMax = 0, rightMax = 0; //记录当前位置及其左边的最高柱子和当前位置及其右边的最高柱子
+        int sum = 0; //记录雨水量
+        while (left < right) { //左右指针相遇，则结束循环
+            leftMax = max(leftMax, height[left]); //记录当前位置及其左边的最高柱子
+            rightMax = max(rightMax, height[right]); //记录当前位置及其右边的最高柱子
+            if (leftMax <= rightMax) { //右边柱子高，说明当前位置只能积左边最高柱子减当前位置柱子的水
+                sum += leftMax - height[left];
+                left++; //移动左指针
+            }
+            else { //左边柱子高，说明当前位置只能积右边最高柱子减当前位置柱子的水
+                sum += rightMax - height[right];
+                right--; //移动右指针
+            }
+        }
+        return sum;
+    }
+};
+```
+
+# 滑动窗口
+
+## [3. 无重复字符的最长子串](https://leetcode.cn/problems/longest-substring-without-repeating-characters/)
+
+### 解法1：滑动窗口+哈希
+
+$$
+O(n)+O(C)//C为字符集的大小
+$$
+
+```C++
+class Solution {
+public:
+    int lengthOfLongestSubstring(string s) {
+        unordered_map<char, int> hash; //记录当前字符出现的次数
+        int i, j; //双指针，i表示当前位置，也是子串的末位，j表示子串的首位
+        int maxLength = 0, length = 0; //分别记录最长子串的长度和当前子串的长度
+        for (int j = 0; j < s.length(); j++) {
+            while (hash[s[j]] > 0) { //右移i直到当前子串中没有重复的字符
+                hash[s[i]]--;
+                i++;
+                length--;
+            }
+            hash[s[j]] = 1;
+            length++;
+            maxLength = max(maxLength, length); //若当前子串长度大于最长子串长度，更新最长子串长度
+        }
+        return maxLength;
+    }
+};
+```
+
+## [438. 找到字符串中所有字母异位词](https://leetcode.cn/problems/find-all-anagrams-in-a-string/)
+
+### 解法1：滑动窗口+哈希
+
+$$
+O(lenS+lenP)//lenS和lenP为字符串s和p的长度
+$$
+
+```C++
+class Solution {
+public:
+    vector<int> findAnagrams(string s, string p) {
+        int lenS = s.length(), lenP = p.length(); //记录两个字符串长度
+        if (lenS < lenP) { //字符串s长度小于字符串p，则必然没有子串
+            return vector<int>();
+        }
+        int count[26] = {0}; //记录当前子串各字符在s中出现的次数-p中出现的次数（字符差）
+        int differ = 0; //记录当前子串和p中有差异的字符的个数
+
+        for (int i = 0; i < lenP; i++) { //从0开始的子串中各字符差
+            count[s[i] - 'a']++;
+            count[p[i] - 'a']--;
+        }
+
+        for (int i = 0; i < 26; i++) { //统计开始子串和p有差异的字符个数
+            if (count[i] != 0) {
+                differ++;
+            }
+        }
+
+        vector<int> result; //记录所有p的异位词子串的起始索引
+
+        if (differ == 0) {
+            result.push_back(0); //differ为0，说明开始子串就是p的异位词
+        }
+
+        for (int i = 0; i < lenS -lenP; i++) { //考察i+1至i+lenP的子串是否为p的异位词
+            //上一循环结束的子串为i至i+lenP-1，该子串移出第i位，加入第i+lenP位，为要考察的i+1至i+lenP的子串
+            if (count[s[i] - 'a'] == 0) { //第i位字符在i至i+lenP-1的子串中出现次数刚好和p中相同，则移出后differ+1，即有差异的字符个数加一
+                differ++;
+            }
+            else if (count[s[i] - 'a'] == 1) { //第i位字符在i至i+lenP-1的子串中出现次数刚好比p中错一次，则移出后differ-1，即有差异的字符个数减一
+                differ--;
+            }
+            count[s[i] - 'a']--;
+
+            if (count[s[i + lenP] - 'a'] == 0) { //移入第i+lenP位字符，操作原因同上
+                differ++;
+            }
+            else if (count[s[i + lenP] - 'a'] == -1) {
+                differ--;
+            }
+            count[s[i + lenP] - 'a']++;
+
+            if (differ == 0) { //differ为0，说明要考察的i+1至i+lenP的子串就是p的异位词
+                result.push_back(i + 1);
+            }
+        }
+
+        return result;
+    }
+};
+```
+
+# 子串
+
+## [560. 和为 K 的子数组](https://leetcode.cn/problems/subarray-sum-equals-k/)
+
+$$
+O(n)+O(n)
+$$
+
+```C++
+class Solution {
+public:
+    int subarraySum(vector<int>& nums, int k) {
+        unordered_map<int, int> count; //记录前缀和出现的次数
+        count[0] = 1; //避免前缀和等于k时后续操作出错；
+        int pre = 0; //前缀和
+        int result = 0; //记录符合要求的连续子数组个数
+        for (int i = 0; i < nums.size(); i++) {
+            pre += nums[i];
+            result += count[pre - k]; //若之前出现过 当前前缀和-k 的前缀和，则加上该前缀和出现的次数
+            count[pre]++;
         }
         return result;
     }
 };
 ```
 
+## ==[239. 滑动窗口最大值](https://leetcode.cn/problems/sliding-window-maximum/)==
+
+### 解法1：滑动窗口
+
+$$
+O(n)+O(k)
+$$
+
+```C++
+class Solution {
+public:
+    vector<int> maxSlidingWindow(vector<int>& nums, int k) {
+        deque<int> q;
+        vector<int> maxn;
+        for(int i=0;i<nums.size();i++)
+        {
+            while(!q.empty()&&q.front()<i-k+1) q.pop_front();
+            while(!q.empty()&&nums[q.back()]<=nums[i]) q.pop_back();
+            q.push_back(i);
+            if(i>=k-1) maxn.push_back(nums[q.front()]);
+        }
+        return maxn;
+    }
+};
+```
+
+## [76. 最小覆盖子串](https://leetcode.cn/problems/minimum-window-substring/)
+
+### 解法1：双指针
+
+$$
+O(n)+O(C)
+$$
+
+```C++
+class Solution {
+public:
+    string minWindow(string s, string t) {
+        unordered_map<int, int> Count; //记录各个字符在当前访问的s子串和t中出现的次数的差
+        unordered_map<int, bool> st; //记录t中出现的字符
+
+        for (int i = 0; i < t.length(); i++) { //记录t中各个字符出现的次数（以负数记录）并标记其出现过
+            Count[t[i]]--;
+            st[t[i]] = true;
+        }
+        int differ = 0; //记录子串中仍然缺少的字符数
+        for (auto it:Count) {
+            if (it.second < 0) { //出现负数，缺少的字符数加一
+                differ++;
+            }
+        }
+
+        int i = 0, j = 0; //双指针，表示当前访问子串
+        int minI = s.length(), minJ = -1; //记录最小子串的起始位置和结束为止
+        
+        while (i < s.length()) {
+            Count[s[i]]++; //当前字符出现次数加一
+            if (Count[s[i]] == 0 && st[s[i]] == true) { //加一后该字符出现次数的大于等于零且该字符属于t中字符
+                differ--;
+            }
+            if (differ > 0) { //当前子串仍未涵盖t中所有字符，移动i指针后继续下一循环
+                i++;
+                continue;
+            }
+            else { //当前子串已涵盖t中所有字符，开始移动j指针缩短子串长度
+                while (differ == 0) {
+                    if (i - j < minI - minJ) {
+                        minI = i;
+                        minJ = j;
+                    }
+                    Count[s[j]]--; //j指针右移后，s[j]被移出，字符出现次数减一
+                    if (Count[s[j]] == -1 && st[s[j]] == true) { //减一后该字符出现次数的差为-1且该字符属于t中字符
+                        differ++;
+                        i++;
+                    }
+                    j++;
+                }
+            }
+        }
+
+        if (minJ != -1) {
+            return s.substr(minJ, minI - minJ + 1);
+        }
+        else {
+            return "";
+        }
+    }
+};
+```
+
+# 普通数组
+
+## [53. 最大子数组和](https://leetcode.cn/problems/maximum-subarray/)
+
+### 解法1：动态规划
+
+$$
+O(n)+O(n)
+$$
+
+```C++
+class Solution {
+public:
+    int maxSubArray(vector<int>& nums) {
+        vector<int> dp(nums.size() + 1, 0); //dp数组，含义为以当前位置结尾的最大和的连续子数组
+        int result = -10010; //记录结果
+        for (int i = 0; i < nums.size(); i++) {
+            dp[i + 1] = max(nums[i], nums[i] + dp[i]); //若前一位的最大和大于零，则当前位接上去，否则只取当前位
+            result = max(result, dp[i + 1]); //更新结果
+        }
+        return result;
+    }
+};
+```
+
+### 解法2：贪心
+
+$$
+O(n)+O(1)
+$$
+
+```C++
+class Solution {
+public:
+    int maxSubArray(vector<int>& nums) {
+        int sum = 0; //记录当前位置的最大连续子数组和
+        int result = -10010; //记录结果
+        for (int i = 0; i < nums.size(); i++) {
+            sum += nums[i]; //更新sum
+            result = max(result, sum); //更新result
+            if (sum < 0) { //如果sum小于零，则重新开始计算最大和
+                sum = 0;
+            }
+        }
+        return result;
+    }
+};
+```
+
+## [56. 合并区间](https://leetcode.cn/problems/merge-intervals/)
+
+### 解法1：排序
+
+$$
+O(n\log n)+O(1)
+$$
+
+```C++
+class Solution {
+public:
+    static bool cmp(const vector<int>& u,const vector<int>& v) {
+        if (u[0] != v[0]) { //若左边界不相等，则按左边界从小到大排
+            return u[0] < v[0];
+        }
+        else { //若左边界相等，则按右边界从小到大排
+            return u[1] < v[1];
+        }
+    }
+    vector<vector<int>> merge(vector<vector<int>>& intervals) {
+        sort(intervals.begin(), intervals.end(), cmp); //将所有区间排序
+        vector<vector<int>> result; //存储合并后的区间
+
+        int left = intervals[0][0], right = intervals[0][1]; //存储合并区间的左右边界
+        for (int i = 1; i < intervals.size(); i++) {
+            if (intervals[i][0] > right) { //形成一个合并区间
+                result.push_back({left, right}); //存储合并区间
+                left = intervals[i][0];
+                right = intervals[i][1];
+            }
+            else { //可以将当前区间加入合并区间，扩大合并区间边界
+                right = max(right, intervals[i][1]);
+            }
+        }
+
+        result.push_back({left, right}); //循环结束后还有最后一个合并区间需要收入
+
+        return result;
+    }
+};
+```
+
+## [189. 轮转数组](https://leetcode.cn/problems/rotate-array/)
+
+### 解法1：三次翻转
+
+$$
+O(n)+O(1)
+$$
+
+```C++
+class Solution {
+public:
+    void rotate(vector<int>& nums, int k) {
+        k = k % nums.size(); //当k大于数组个数时，轮转结果和k取余后是一样的
+        for (int i = 0; i < nums.size() / 2; i++) { //对数组整体翻转
+            swap(nums[i], nums[nums.size() - 1 - i]);
+        }
+        for (int i = 0; i < k / 2; i++) { //翻转前k个数
+            swap(nums[i], nums[k - 1 - i]);
+        }
+        for (int i = k; i <(nums.size() + k) / 2; i++) { //对后nums.size()-k个数进行翻转
+            swap(nums[i], nums[nums.size() - 1 - (i - k)]);
+        }
+    }
+};
+```
+
+## [238. 除自身以外数组的乘积](https://leetcode.cn/problems/product-of-array-except-self/)
+
+### 解法1：动态规划
+
+$$
+O(n)+O(n)
+$$
+
+```C++
+class Solution {
+public:
+    vector<int> productExceptSelf(vector<int>& nums) {
+        vector<int> left(nums.size(), 1), right(nums.size(), 1); //两个数组分别存储对应位置左侧的乘积和右侧的乘积
+        vector<int> result(nums.size()); //记录结果
+        for (int i = 1; i < nums.size(); i++) {
+            left[i] = left[i - 1] * nums[i - 1];
+        }
+        for (int i = nums.size() - 2; i >= 0; i--) {
+            right[i] = right[i + 1] * nums[i + 1];
+        }
+        for (int i = 0; i < nums.size(); i++) {
+            result[i] = left[i] * right[i];
+        }
+        
+        return result;
+    }
+};
+```
+
+### 解法2：动态规划（空间复杂度优化）
+
+$$
+O(n)+O(1)
+$$
+
+```C++
+class Solution {
+public:
+    vector<int> productExceptSelf(vector<int>& nums) {
+        vector<int> result(nums.size(), 1); //存储结果
+        for (int i = 1; i < nums.size(); i++) { //先乘左侧乘积
+            result[i] = result[i - 1] * nums[i - 1];
+        }
+        int temp = 1;
+        for (int i = nums.size() - 2; i >= 0; i--) { //再乘右侧乘积
+            temp *= nums[i + 1];
+            result[i] *= temp;
+        }
+        return result;
+    }
+};
+```
+
+## [41. 缺失的第一个正数](https://leetcode.cn/problems/first-missing-positive/)
+
+### 解法1：哈希
+
+$$
+O(n)+O(n)
+$$
+
+```C++
+class Solution {
+public:
+    int firstMissingPositive(vector<int>& nums) {
+        vector<bool> st(nums.size() + 1, false); //记录已经出现的正整数
+
+        for (int i = 0; i < nums.size(); i++) {
+            if (nums[i] > 0 && nums[i] <= nums.size()) { //标记在1到nums.size()范围内出现的正数
+                st[nums[i]] = true;
+            }
+        }
+
+        for (int i = 1; i <= nums.size(); i++) { //寻找在1到nums.size()范围内未出现的正数
+            if (st[i] == false) {
+                return i;
+            }
+        }
+
+        return nums.size() + 1; ////1到nums.size()范围内的正数都已出现，则返回nums.size()+1
+    }
+};
+```
+
+### 解法2：置换
+
+$$
+O(n)+O(1)
+$$
+
+```C++
+class Solution {
+public:
+    int firstMissingPositive(vector<int>& nums) {
+        for (int i = 0; i < nums.size(); i++) {
+            while (nums[i] > 0 && nums[i] <= nums.size() && nums[i] != nums[nums[i] - 1]) { //交换nums[i]和nums[nums[i] - 1]，直到两者相等，说明nums[i]已经被放在正确的位置上
+                swap(nums[nums[i] - 1], nums[i]);
+            }
+        }
+
+        for (int i = 0; i < nums.size(); i++) {
+            if (nums[i] != i + 1) { //若当前位置上的数不在1到nums.size()的范围内，则说明i+1为缺失的最小正数
+                return i + 1;
+            }
+        }
+        return nums.size() + 1; //所有位置上的数都在1到nums.size()的范围内，则nums.size()+1为缺失的最小正数
+    }
+};
+```
+
+# 矩阵
+
+## [73. 矩阵置零](https://leetcode.cn/problems/set-matrix-zeroes/)
+
+### 解法1：使用矩阵第一行和第一列作为标记变量
+
+$$
+O(mn)+O(1)
+$$
+
+```C++
+class Solution {
+public:
+    void setZeroes(vector<vector<int>>& matrix) {
+        int m = matrix.size(); //记录行数
+        int n = matrix[0].size(); //记录列数
+        bool flagRow = false, flagCol = false; //记录第一行和第一列是否出现0
+
+        //算法的整体思路是借助矩阵的第一行和第一列记录含有0的行和列
+        for (int i = 0; i < m; i++) { //记录第一列是否出现0
+            if (matrix[i][0] == 0) {
+                flagCol = true;
+                break;
+            }
+        }
+        for (int i = 0; i < n; i++) { //记录第一行是否出现0
+            if (matrix[0][i] == 0) {
+                flagRow = true;
+                break;
+            }
+        }
+        for (int i = 1; i < m; i++) {
+            for (int j = 1; j < n; j++) {
+                if (matrix[i][j] == 0) {
+                    matrix[i][0] = 0;
+                    matrix[0][j] = 0;
+                }
+            }
+        }
+
+        //置0
+        for (int i = 1; i < m; i++) {
+            for (int j = 1; j < n; j++) {
+                if (matrix[i][0] == 0 || matrix[0][j] == 0) {
+                    matrix[i][j] = 0;
+                }
+            }
+        }
+        if (flagRow) { //第一行置0
+            for (int i = 0; i < n; i++) {
+                matrix[0][i] = 0;
+            }
+        }
+        if (flagCol) { //第一列置0
+            for (int i = 0; i < m; i++) {
+                matrix[i][0] = 0;
+            }
+        }
+
+    }
+};
+```
+
+## [54. 螺旋矩阵](https://leetcode.cn/problems/spiral-matrix/)
+
+### 解法1：模拟
+
+$$
+O(mn)+O(1)
+$$
+
+```C++
+class Solution {
+public:
+    vector<int> spiralOrder(vector<vector<int>>& matrix) {
+        int m = matrix.size(), n = matrix[0].size(); //记录矩阵的行数和列数
+        vector<int> v; //结果数组
+        int u = 0, d = m - 1, l = 0, r = n - 1; //记录当前要处理的最上行，最下行，最左行，最右行
+        while (u <= d && l <= r) { //当最上行和最下行，最左行和最右行未相遇时，继续处理
+            for (int i = l; i <= r; i++) { //处理最上行
+                v.push_back(matrix[u][i]);
+            }
+            if (++u > d) { //最上行下移，且当与最下行相遇时，退出循环
+                break;
+            }
+            for (int i = u; i <= d; i++) { //处理最右行
+                v.push_back(matrix[i][r]);
+            }
+            if (--r < l) { //最右行左移，且当与最左行相遇时，退出循环
+                break;
+            }
+            for (int i = r; i >= l; i--) { //处理最下行
+                v.push_back(matrix[d][i]);
+            }
+            if (--d < u) {
+                break; //最下行上移，且当与最上行相遇时，退出循环
+            }
+            for (int i = d; i >= u; i--) { //处理最左行
+                v.push_back(matrix[i][l]);
+            }
+            if (++l > r) {
+                break; //最左行右移，且当与最右行相遇时，退出循环
+            }
+        }
+
+        return v;
+    }
+};
+```
+
+## [48. 旋转图像](https://leetcode.cn/problems/rotate-image/)
+
+### 解法1：模拟
+
+$$
+O(n^2)+O(1)
+$$
+
+```C++
+class Solution {
+public:
+    void rotate(vector<vector<int>>& matrix) {
+        int n = matrix.size();
+        for(int i = 0; i < n / 2; i++){
+            for(int j = i; j < n - 1 - i; j++){ //每次从对角线往右走
+                int temp                     = matrix[i][j];
+                matrix[i][j]                 = matrix[n - 1 - j][i];
+                matrix[n - 1 - j][i]         = matrix[n - 1 - i][n - 1 - j];
+                matrix[n - 1 - i][n - 1 - j] = matrix[j][n - 1 - i];
+                matrix[j][n - 1 - i]         = temp;
+            }
+        }
+    }
+};
+```
+
+## [240. 搜索二维矩阵 II](https://leetcode.cn/problems/search-a-2d-matrix-ii/)
+
+### 解法1：对角查找
+
+$$
+O(\min(m,n))+O(1)
+$$
+
+```C++
+class Solution {
+public:
+    bool searchMatrix(vector<vector<int>>& matrix, int target) {
+        if (matrix.size() == 0 || matrix[0].size() == 0) { //矩阵宽或高为0，则直接返回false
+            return false;
+        }
+        int i = 0, j = matrix[0].size() - 1; //从右上角开始找
+        while (i < matrix.size() && j >= 0) {
+            if (matrix[i][j] == target) { //找到了，退出循环，并返回true
+                return true;
+            }
+            else if(matrix[i][j] < target) { //当前值比目标值小，往下走
+                i++;
+            }
+            else { //当前值比目标值大，往左走
+                j--;
+            }
+        }
+        return false; //没找到，返回false
+    }
+};
+```
+
+# 链表
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-# 滑动窗口
 
 ## [2. 两数相加](https://leetcode.cn/problems/add-two-numbers/)
 
@@ -205,36 +948,6 @@ public:
         }
 
         return dummyHead->next;
-    }
-};
-```
-
-## [3. 无重复字符的最长子串](https://leetcode.cn/problems/longest-substring-without-repeating-characters/)
-
-### 解法1：滑动窗口+哈希
-
-$$
-O(n)+O(C)//C为字符集的大小
-$$
-
-```C++
-class Solution {
-public:
-    int lengthOfLongestSubstring(string s) {
-        unordered_map<char,int> hash;
-        int i=0,j=0;
-        int max_length=0,count=0;
-        for(j=0;j<s.length();j++){
-            while(hash[s[j]]>0){
-                hash[s[i]]--;
-                i++;
-                count--;
-            }
-            count++;
-            hash[s[j]]=1;
-            max_length=max(max_length,count);
-        }
-        return max_length;
     }
 };
 ```
@@ -396,42 +1109,6 @@ public:
 ```
 
 
-
-## [15. 三数之和](https://leetcode.cn/problems/3sum/)
-
-### 解法1：排序+三指针
-
-$$
-O(n^2)+O(1)
-$$
-
-```C++
-class Solution {
-public:
-    vector<vector<int>> threeSum(vector<int>& nums) {
-        sort(nums.begin(),nums.end());
-        vector<vector<int>> ans;
-        for(int i=0;i<nums.size();i++)
-        {
-            if(nums[i]>0) return ans;
-            if(i>0&&nums[i]==nums[i-1]) continue;
-            int j=i+1,k=nums.size()-1;
-            while(j<k)
-            {
-                if(nums[i]+nums[j]+nums[k]==0)
-                {
-                    ans.push_back({nums[i],nums[j],nums[k]}),j++,k--;
-                    while(j<k&&nums[j]==nums[j-1]) j++;
-                    while(k>j&&nums[k]==nums[k+1]) k--;
-                }
-                else if(nums[i]+nums[j]+nums[k]<0) j++;
-                else k--;
-            }
-        }
-        return ans;
-    }
-};
-```
 
 ## [17. 电话号码的字母组合](https://leetcode.cn/problems/letter-combinations-of-a-phone-number/)
 
@@ -1039,89 +1716,6 @@ public:
 };
 ```
 
-## [42. 接雨水](https://leetcode.cn/problems/trapping-rain-water/)
-
-### 解法1：动态规划
-
-$$
-O(n)+O(n)
-$$
-
-```C++
-class Solution {
-public:
-    int trap(vector<int>& height) {
-        if(height.size()<=2) return 0;
-        int sum=0;
-        vector<int> left_height(height.size(),0),right_height(height.size(),0);
-        left_height[0]=height[0],right_height[height.size()-1]=height[height.size()-1];
-        for(int i=1;i<height.size();i++) left_height[i]=max(height[i],left_height[i-1]);
-        for(int i=height.size()-2;i>=0;i--) right_height[i]=max(height[i],right_height[i+1]);
-        for(int i=1;i<=height.size()-2;i++) sum+=min(left_height[i],right_height[i])-height[i];
-        return sum;
-    }
-};
-```
-
-### 解法2：单调栈
-
-$$
-O(n)+O(n)
-$$
-
-```C++
-class Solution {
-public:
-    int trap(vector<int>& height) {
-        stack<int> st;
-        int sum=0;
-        for(int i=0;i<height.size();i++){
-            while(!st.empty()&&height[i]>height[st.top()]){
-                int mid=st.top();
-                st.pop();
-                if(!st.empty()){
-                    int h=min(height[i],height[st.top()])-height[mid];
-                    int w=i-st.top()-1;
-                    sum+=h*w;
-                }
-            }
-            st.push(i);
-        }
-        return sum;
-    }
-};
-```
-
-### 解法3：双指针
-
-$$
-O(n)+O(n)
-$$
-
-```C++
-class Solution {
-public:
-    int trap(vector<int>& height) {
-        int left=0,right=height.size()-1;
-        int leftMax=0,rightMax=0;
-        int sum=0;
-        while(left<right){
-            leftMax=max(leftMax,height[left]);
-            rightMax=max(rightMax,height[right]);
-            if(leftMax<rightMax){
-                sum+=leftMax-height[left];
-                left++;
-            }
-            else{
-                sum+=rightMax-height[right];
-                right--;
-            }
-        }
-        return sum;
-    }
-};
-```
-
 ## [46. 全排列](https://leetcode.cn/problems/permutations/)
 
 ### 解法1：回溯
@@ -1157,76 +1751,6 @@ public:
         memset(used,false,sizeof(used));
         backtracking(nums);
         return result;
-    }
-};
-```
-
-## [48. 旋转图像](https://leetcode.cn/problems/rotate-image/)
-
-### 解法1：模拟
-
-$$
-O(n^2)+O(1)
-$$
-
-```C++
-class Solution {
-public:
-    void rotate(vector<vector<int>>& matrix) {
-        int n=matrix.size();
-        for(int i=0;i<n/2;i++){
-            for(int j=i;j<n-1-i;j++){
-                int temp=matrix[i][j];
-                matrix[i][j]=matrix[n-1-j][i];
-                matrix[n-1-j][i]=matrix[n-1-i][n-1-j];
-                matrix[n-1-i][n-1-j]=matrix[j][n-1-i];
-                matrix[j][n-1-i]=temp;
-            }
-        }
-    }
-};
-```
-
-## [53. 最大子数组和](https://leetcode.cn/problems/maximum-subarray/)
-
-### 解法1：动态规划
-
-$$
-O(n)+O(n)
-$$
-
-```C++
-class Solution {
-public:
-    int maxSubArray(vector<int>& nums) {
-        vector<int> dp(nums.size()+1,0);
-        int MAX=-10010;
-        for(int i=1;i<=nums.size();i++){
-            dp[i]=max(nums[i-1],dp[i-1]+nums[i-1]);
-            MAX=max(MAX,dp[i]);
-        }
-        return MAX;
-    }
-};
-```
-
-### 解法2：贪心
-
-$$
-O(n)+O(1)
-$$
-
-```C++
-class Solution {
-public:
-    int maxSubArray(vector<int>& nums) {
-        vector<int> dp(nums.size()+1,0);
-        int MAX=-10010;
-        for(int i=1;i<=nums.size();i++){
-            dp[i]=max(nums[i-1],dp[i-1]+nums[i-1]);
-            MAX=max(MAX,dp[i]);
-        }
-        return MAX;
     }
 };
 ```
@@ -3430,122 +3954,6 @@ public:
 };
 ```
 
-## [238. 除自身以外数组的乘积](https://leetcode.cn/problems/product-of-array-except-self/)
-
-### 解法1：动态规划
-
-$$
-O(n)+O(n)
-$$
-
-```C++
-class Solution {
-public:
-    vector<int> productExceptSelf(vector<int>& nums) {
-        vector<int> left(nums.size()), right(nums.size());
-        vector<int> result(nums.size());
-        for (int i = 0; i < nums.size(); i++) {
-            if (i > 0) {
-                left[i] = left[i - 1] * nums[i - 1];
-                right[nums.size() - 1 - i] = right[nums.size() - i] * nums[nums.size() - i];
-            }
-            else {
-                left[i] = 1;
-                right[nums.size() - 1 - i] = 1;
-            }
-        }
-        for (int i = 0; i < nums.size(); i++) {
-            result[i] = left[i] * right[i];
-        }
-        return result;
-    }
-};
-```
-
-### 解法2：动态规划
-
-$$
-O(n)+O(1)
-$$
-
-```C++
-class Solution {
-public:
-    vector<int> productExceptSelf(vector<int>& nums) {
-        vector<int> result(nums.size());
-        for (int i = 0; i < nums.size(); i++) {
-            if (i > 0) {
-                result[i] = result[i - 1] * nums[i - 1];
-            }
-            else {
-                result[i] = 1;
-            }
-        }
-        int temp = 1;
-        for (int i = nums.size() - 1; i >= 0; i--) {
-            if (i < nums.size() - 1) {
-                temp *= nums[i + 1];
-                result[i] *= temp;
-            }
-            else {
-                result[i] *= 1;
-            }
-        }
-        return result;
-    }
-};
-```
-
-## ==[239. 滑动窗口最大值](https://leetcode.cn/problems/sliding-window-maximum/)==
-
-### 解法1：滑动窗口
-
-$$
-O(n)+O(k)
-$$
-
-```C++
-class Solution {
-public:
-    vector<int> maxSlidingWindow(vector<int>& nums, int k) {
-        deque<int> q;
-        vector<int> maxn;
-        for(int i=0;i<nums.size();i++)
-        {
-            while(!q.empty()&&q.front()<i-k+1) q.pop_front();
-            while(!q.empty()&&nums[q.back()]<=nums[i]) q.pop_back();
-            q.push_back(i);
-            if(i>=k-1) maxn.push_back(nums[q.front()]);
-        }
-        return maxn;
-    }
-};
-```
-
-## [240. 搜索二维矩阵 II](https://leetcode.cn/problems/search-a-2d-matrix-ii/)
-
-### 解法1：对角查找
-
-$$
-O(\min(m,n))+O(1)
-$$
-
-```C++
-class Solution {
-public:
-    bool searchMatrix(vector<vector<int>>& matrix, int target) {
-        if(matrix.size()==0||matrix[0].size()==0) return false;
-        int i=0,j=matrix[0].size()-1;
-        while(i<matrix.size()&&j>=0){
-            if(matrix[i][j]==target) return true;
-            else if(matrix[i][j]<target) i++;
-            else j--;
-        }
-        return false;
-    }
-};
-```
-
 ## [253.会议室II](https://leetcode.cn/problems/meeting-rooms-ii/?favorite=2cktkvj)（==Plus会员题==）
 
 ## [279. 完全平方数](https://leetcode.cn/problems/perfect-squares/)
@@ -3827,7 +4235,7 @@ public:
 
 
 
-## [438. 找到字符串中所有字母异位词](https://leetcode.cn/problems/find-all-anagrams-in-a-string/)
+
 
 
 
