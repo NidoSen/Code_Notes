@@ -1,33 +1,983 @@
 
 
-# 剑指Offer刷题笔记
+# 字符串
+
+## [剑指 Offer 05. 替换空格](https://leetcode.cn/problems/ti-huan-kong-ge-lcof/)
+
+### 解法1：模拟
+
+$$
+O(n)+O(1)
+$$
+
+```C++
+class Solution {
+public:
+    string replaceSpace(string s) {        
+        string array;
+        for (auto c : s) {
+            if (c == ' ') {
+                array += "%20";
+            }
+            else {
+                array.push_back(c);
+            }
+        }
+        return array;
+    }
+};
+```
+
+## [剑指 Offer 58 - I. 翻转单词顺序](https://leetcode.cn/problems/fan-zhuan-dan-ci-shun-xu-lcof/)
+
+### 解法1：模拟
+
+$$
+O(n)+O(1)
+$$
+
+```C++
+class Solution {
+public:
+    string reverseLeftWords(string s, int n) {
+        s = s.substr(n) + s.substr(0, n);
+        return s;
+    }
+};
+```
+
+## ==[剑指 Offer 20. 表示数值的字符串](https://leetcode.cn/problems/biao-shi-shu-zhi-de-zi-fu-chuan-lcof/)==（本题适合死记硬背）
+
+### 解法1：模拟
+
+```C++
+class Solution {
+public:
+    bool isNumber(string s) {
+        //先去掉s前后的空格
+        string str;
+        int i = 0, j = s.length() - 1;
+        while (i < s.length() && s[i] == ' ') {
+            i++;
+        }
+        while (j >= 0 && s[j] == ' ') {
+            j--;
+        }
+        for (int k = i; k <= j; k++) {
+            str += s[k];
+        }
+        if (str.length() == 0) {
+            return false;
+        }
+
+        //若字符串开始为+/-号，后移一位
+        int index=0;
+        if (str[index] == '+' || str[index] == '-') {
+            index++;
+        }
+        if (index == str.length()) {
+            return false;//字符串只有一个+/-号，结果为false
+        }
+
+        //检查字符串直到遇见第一个./e/E符号退出
+        while (index < str.length() && str[index] != '.' && str[index] != 'e' && str[index]!='E') {
+            if (str[index] < '0' || str[index] > '9') {
+                return false;//中途出现空格或其他符号,结果为false
+            }
+            else {
+                index++;
+            }
+        }
+
+        //根据第一个循环结果决定下一步操作
+        if (index == str.length()) {
+            return true;//字符串表示整数，结果为true
+        }
+        else if (str[index] == '.') {//遇见小数点.
+            if (index >0 && str[index - 1] >= '0' && str[index - 1] <= '9');//小数点前面至少一位数字
+            else if (index + 1 == str.length() || str[index + 1] < '0' || str[index + 1] > '9') {
+                return false;//小数点前面没数字，后面也没数字（两种情况：后面没字符，或字符为空格或其他符号）
+            }
+            index++;
+        }
+
+        //如果第一个环结束在e/E，则该循环不执行；如果第一个循环结束在小数点并跳一位后，则继续寻找e/E
+        while (index < str.length() && str[index] != 'e' && str[index] != 'E') {
+            if (str[index] < '0' || str[index] > '9') {
+                return false;//中途出现空格或其他符号,结果为false
+            }
+            else {
+                index++;
+            }
+        }
+
+        //根据第二个循环结果决定下一步操作
+        if (index == str.length()) {
+            return true;//字符串表示整数或小数（不带e/E）
+        }
+        else {
+            if (index > 0 && (str[index - 1] >= '0' && str[index - 1] <= '9' || str[index - 1] == '.'));//e/E前面至少一位数字或小数点
+            else if (index >= 0 || index == str.length() - 1) {
+                return false;//e/E前面有不是数字或小数点的字符，或e/E后面连一位数字都没有
+            }
+            index++;
+        }
+
+        if (str[index] == '+' || str[index] == '-') {
+            index++;//e/E后面是+/-号，后移一位
+        }
+        if (index == str.length()) {
+            return false;//e/E后面只有一个+/-号，结果为false
+        }
+        //第三个循环，确定e/E后面是整数，否则为false
+        while (index < str.length()) {
+            if (str[index] < '0' || str[index] > '9') {
+                return false;
+            }
+            else {
+                index++;
+            }
+        }
+        return true;
+    }
+};
+```
+
+## [剑指 Offer 67. 把字符串转换成整数](https://leetcode.cn/problems/ba-zi-fu-chuan-zhuan-huan-cheng-zheng-shu-lcof/)
+
+### 解法1：模拟
+
+$$
+O(n)+O(1)
+$$
+
+```C++
+class Solution {
+public:
+    int strToInt(string str) {
+        int index = 0;
+        while (str[index] == ' ') {
+            index++;
+        }
+        if (index == str.length() || !(str[index] >= '0' && str[index] <= '9' || str[index] == '+' || str[index] == '-')) { //字符串都是空格 或者 第一个有效字符不是数字或正负号
+            return 0;
+        }
+
+        int flag = true;
+        if (str[index] == '+' || str[index] == '-') { //如果第一个有效字符为正负号，则判断结果为正还是负
+            flag = str[index] == '+' ? true : false;
+            index++;
+        }
+        int num = 0;
+        while (str[index] >= '0' && str[index] <= '9') {
+            if (flag == true) { //为正数
+                if (num < INT_MAX / 10 || num == INT_MAX / 10 && str[index] - '0' <= INT_MAX % 10) { //当继续加数字上去不会大于INT_MAX时
+                    num = num * 10 + (str[index] - '0');
+                }
+                else {
+                    return INT_MAX;
+                }
+            }
+            else { //为负数
+                if (num > INT_MIN / 10 || num == INT_MIN / 10 && str[index] - '0' <= -(INT_MIN % 10)) {  //当继续加数字上去不会小于INT_MIN时
+                    num = num * 10 - (str[index] - '0');
+                }
+                else {
+                    return INT_MIN;
+                }
+            }
+            index++;
+        }
+        return num;
+    }
+};
+```
+
+# 链表
+
+## ==[剑指 Offer 06. 从尾到头打印链表](https://leetcode.cn/problems/cong-wei-dao-tou-da-yin-lian-biao-lcof/)==
+
+### 解法1：模拟
+
+$$
+O(n)+O(1)
+$$
+
+```C++
+/**
+ * Definition for singly-linked list.
+ * struct ListNode {
+ *     int val;
+ *     ListNode *next;
+ *     ListNode(int x) : val(x), next(NULL) {}
+ * };
+ */
+class Solution {
+public:
+    vector<int> reversePrint(ListNode* head) {
+        ListNode* node = head;
+        vector<int> result;
+        while (node != NULL) {
+            result.push_back(node->val);
+            node = node->next;
+        }
+        reverse(result.begin(), result.end()); //reverse函数在vector容器中的使用
+        return result;
+    }
+};
+```
+
+### ==笔记：`reverse()`==
+
+```C++
+//翻转数组
+//头文件
+#include <algorithm>
+//使用方法
+reverse(a, a+n);//n为数组中的元素个数
+
+//翻转字符串
+//用法为
+reverse(str.begin(), str.end());
+
+//翻转向量
+//用法
+reverse(vec.begin(), vec.end());
+```
+
+## [剑指 Offer 24. 反转链表](https://leetcode.cn/problems/fan-zhuan-lian-biao-lcof/)
+
+### 解法1：头插法
+
+```C++
+/**
+ * Definition for singly-linked list.
+ * struct ListNode {
+ *     int val;
+ *     ListNode *next;
+ *     ListNode(int x) : val(x), next(NULL) {}
+ * };
+ */
+class Solution {
+public:
+    ListNode* reverseList(ListNode* head) {
+        ListNode* dummyHead1 = new ListNode(), * dummyHead2 = new ListNode(); //设置虚拟头结点，方便后续操作
+        dummyHead1->next = head;
+        ListNode* p = head;
+        while (p != NULL) { //头插法
+            //将当前节点取出后重新链接原单链表
+            ListNode* q = p;
+            p = p->next;
+            dummyHead1->next = p;
+            //将当前节点按头插法加入dummyHead2所在链表
+            q->next = dummyHead2->next;
+            dummyHead2->next = q;
+        }
+        return dummyHead2->next;
+    }
+};
+```
+
+## [剑指 Offer 35. 复杂链表的复制](https://leetcode.cn/problems/fu-za-lian-biao-de-fu-zhi-lcof/)
+
+### 解法1：回溯+哈希
+
+$$
+O(n)+O(1)
+$$
+
+```C++
+/*
+// Definition for a Node.
+class Node {
+public:
+    int val;
+    Node* next;
+    Node* random;
+    
+    Node(int _val) {
+        val = _val;
+        next = NULL;
+        random = NULL;
+    }
+};
+*/
+class Solution {
+public:
+    unordered_map<Node*, Node*> cachedNode;
+    Node* copyRandomList(Node* head) {
+        if (head == NULL) {
+            return NULL;
+        }
+        if (cachedNode[head] != NULL) {
+            return cachedNode[head];
+        }
+        Node* newHead = new Node(head->val);
+        cachedNode[head] = newHead;
+        newHead->next = copyRandomList(head->next);
+        newHead->random = copyRandomList(head->random);
+        return newHead;
+    }
+};
+```
+
+### 解法2：迭代+节点拆分
+
+$$
+O(n)+O(1)
+$$
+
+```C++
+/*
+// Definition for a Node.
+class Node {
+public:
+    int val;
+    Node* next;
+    Node* random;
+    
+    Node(int _val) {
+        val = _val;
+        next = NULL;
+        random = NULL;
+    }
+};
+*/
+class Solution {
+public:
+    Node* copyRandomList(Node* head) {
+        if (head == NULL) {
+            return NULL;
+        }
+        for (Node* node = head; node != NULL; node = node->next->next) {
+            Node* newNode = new Node(node->val);
+            newNode->next = node->next;
+            node->next = newNode;
+        }
+        for (Node* node = head; node != NULL; node = node->next->next) {
+            Node* newNode = node->next;
+            if (node->random != NULL) {
+                newNode->random = node->random->next;
+            }
+        }
+        Node* newHead = head->next;
+        for (Node* node = head; node != NULL; node = node->next) {
+            Node* newNode = node->next;
+            node->next = newNode->next;
+            if (node->next != NULL) {
+                newNode->next = node->next->next;
+            }
+        }
+        return newHead;
+    }
+};
+```
+
+# 双指针
+
+## [剑指 Offer 18. 删除链表的节点](https://leetcode.cn/problems/shan-chu-lian-biao-de-jie-dian-lcof/)
+
+### 解法1：题意
+
+$$
+O(n)+O(1)
+$$
+
+```C++
+/**
+ * Definition for singly-linked list.
+ * struct ListNode {
+ *     int val;
+ *     ListNode *next;
+ *     ListNode(int x) : val(x), next(NULL) {}
+ * };
+ */
+class Solution {
+public:
+    ListNode* deleteNode(ListNode* head, int val) {
+        ListNode* dummyHead = new ListNode(0);
+        dummyHead->next = head;
+        ListNode* pre = dummyHead, * p = head;
+        while (p) {
+            if (p->val == val) {
+                pre->next = p->next;
+                break;
+            }
+            pre = pre->next;
+            p = p->next;
+        }
+        return dummyHead->next;
+    }
+};
+```
+
+## [剑指 Offer 22. 链表中倒数第k个节点](https://leetcode.cn/problems/lian-biao-zhong-dao-shu-di-kge-jie-dian-lcof/)
+
+### 解法1：双指针
+
+```C++
+/**
+ * Definition for singly-linked list.
+ * struct ListNode {
+ *     int val;
+ *     ListNode *next;
+ *     ListNode(int x) : val(x), next(NULL) {}
+ * };
+ */
+class Solution {
+public:
+    ListNode* getKthFromEnd(ListNode* head, int k) {
+        ListNode* p = head, * q = head;
+        while (k-- && q != NULL) {
+            q = q->next;
+        }
+        if (k >= 0) {
+            return NULL;
+        }
+        while (q != NULL) {
+            p = p->next;
+            q = q->next;
+        }
+        return p;
+    }
+};
+```
+
+## [剑指 Offer 25. 合并两个排序的链表](https://leetcode.cn/problems/he-bing-liang-ge-pai-xu-de-lian-biao-lcof/)
+
+### 解法1：归并
+
+$$
+O(n)+O(1)
+$$
+
+```C++
+/**
+ * Definition for singly-linked list.
+ * struct ListNode {
+ *     int val;
+ *     ListNode *next;
+ *     ListNode(int x) : val(x), next(NULL) {}
+ * };
+ */
+class Solution {
+public:
+    ListNode* mergeTwoLists(ListNode* l1, ListNode* l2) {
+        ListNode* dummyHead = new ListNode(0), * p = dummyHead;
+        while (l1 && l2) {
+            if (l1->val <= l2->val) {
+                p->next = l1;
+                l1 = l1->next;
+            }
+            else {
+                p->next = l2;
+                l2 = l2->next;
+            }
+            p = p->next;
+        }
+        if (l1) {
+            p->next = l1;
+        }
+        else {
+            p->next = l2;
+        }
+        return dummyHead->next;
+    }
+};
+```
+
+## [剑指 Offer 52. 两个链表的第一个公共节点](https://leetcode.cn/problems/liang-ge-lian-biao-de-di-yi-ge-gong-gong-jie-dian-lcof/)
+
+### 解法1：双指针
+
+$$
+O(n)+O(1)
+$$
+
+```C++
+/**
+ * Definition for singly-linked list.
+ * struct ListNode {
+ *     int val;
+ *     ListNode *next;
+ *     ListNode(int x) : val(x), next(NULL) {}
+ * };
+ */
+class Solution {
+public:
+    ListNode *getIntersectionNode(ListNode *headA, ListNode *headB) {
+        ListNode* p = headA, * q = headB;
+        int countA = 0, countB = 0;
+        while (p) {
+            p = p->next;
+            countA++;
+        }
+        while (q) {
+            q = q->next;
+            countB++;
+        }
+        p = headA, q = headB;
+        if (countA < countB) {
+            swap(p,q);
+        }
+        int count = abs(countA - countB);
+        while (count--) {
+            p = p->next;
+        }
+        while (p != q) {
+            p = p->next;
+            q = q->next;
+        }
+        return p;
+    }
+};
+```
+
+## [剑指 Offer 21. 调整数组顺序使奇数位于偶数前面](https://leetcode.cn/problems/diao-zheng-shu-zu-shun-xu-shi-qi-shu-wei-yu-ou-shu-qian-mian-lcof/)
+
+### 解法1：双指针
+
+$$
+O(n)+O(1)
+$$
+
+```C++
+class Solution {
+public:
+    vector<int> exchange(vector<int>& nums) {
+        int i = 0, j = nums.size() - 1;
+        while (true) {
+            while (i < j && nums[i] % 2 == 1) {
+                i++;
+            }
+            while (i < j && nums[j] % 2 == 0) {
+                j--;
+            }
+            if (i < j) {
+                swap(nums[i], nums[j]);
+            }
+            else {
+                break;
+            }
+        }
+        return nums;
+    }
+};
+```
+
+## [剑指 Offer 57. 和为s的两个数字](https://leetcode.cn/problems/he-wei-sde-liang-ge-shu-zi-lcof/)
+
+### 解法1：双指针
+
+$$
+O(n)+O(1)
+$$
+
+```C++
+class Solution {
+public:
+    vector<int> twoSum(vector<int>& nums, int target) {
+        int i = 0, j = nums.size() - 1;
+        while (i < j) {
+            if (nums[i] + nums[j] == target) {
+                break;
+            }
+            else if (nums[i] + nums[j] < target) {
+                i++;
+            }
+            else {
+                j--;
+            }
+        }
+        return vector<int>{nums[i], nums[j]};
+    }
+};
+```
+
+## [剑指 Offer 58 - I. 翻转单词顺序](https://leetcode.cn/problems/fan-zhuan-dan-ci-shun-xu-lcof/)
+
+### 解法1：题意
+
+$$
+O(n)+O(n)
+$$
+
+```C++
+class Solution {
+public:
+    string reverseWords(string s) {
+        string result, word; //result存储结果，word存储单个单词
+        int left = 0, right = s.length() - 1; //去掉左右空格后的左边界和右边界
+        while (left < s.length() && s[left] == ' ') {
+            left++;
+        }
+        while (right >= 0 && s[right] == ' ') {
+            right--;
+        }
+        for (int i = left ;i <= right; i++) {
+            if (s[i] != ' ') { //遇到非空字符，插入word扩充单词
+                word += s[i];
+            }
+            else {
+                if (i > 0 && s[i - 1] != ' ') { //只有前一个字符是非空字符的空格，才是word形成的标志
+                    result = " " + word + result;
+                    word = ""; //清空word，为下一次循环做准备
+                }
+            }
+        }
+        result = word + result;
+        return result;
+    }
+};
+```
+
+# 栈与队列
+
+## [剑指 Offer 09. 用两个栈实现队列](https://leetcode.cn/problems/yong-liang-ge-zhan-shi-xian-dui-lie-lcof/)
+
+### 解法1：模拟
+
+$$
+O(1)+O(n)
+$$
+
+```C++
+class CQueue {
+    stack<int> st1, st2; //初始化两个栈，st1用于出队，st2用于入队
+public:
+    CQueue() {
+        //清空两个栈
+        while (!st1.empty()) {
+            st1.pop();
+        }
+        while (!st2.empty()) {
+            st2.pop();
+        }
+    }
+    
+    void appendTail(int value) {
+        st2.push(value); //将元素压入入队栈
+    }
+    
+    int deleteHead() {
+        if (!st1.empty()) { //出队栈非空，直接出队
+            int x = st1.top();
+            st1.pop();
+            return x;
+        }
+        else if (!st2.empty()) { //出队栈空，但入队栈非空，则将入队栈所有元素压入出队栈后再出队
+            while (!st2.empty()) {
+                st1.push(st2.top());
+                st2.pop();
+            }
+            int x = st1.top();
+            st1.pop();
+            return x;
+        }
+        else { //入队栈和出队栈都空，说明队空，返回-1
+            return -1;
+        }
+    }
+};
+
+/**
+ * Your CQueue object will be instantiated and called as such:
+ * CQueue* obj = new CQueue();
+ * obj->appendTail(value);
+ * int param_2 = obj->deleteHead();
+ */
+```
+
+## [剑指 Offer 30. 包含min函数的栈](https://leetcode.cn/problems/bao-han-minhan-shu-de-zhan-lcof/)
+
+### 解法1：模拟
+
+$$
+O(1)+O(n)
+$$
+
+```C++
+class MinStack {
+    stack<int> st, min_st; //分别作为正常的栈和存储最小元素的栈
+public:
+    /** initialize your data structure here. */
+    MinStack() {
+        while (!st.empty()) { //栈非空时将栈清空
+            st.pop();
+        }
+        while (!min_st.empty()) { //最小栈非空时将最小栈清空
+            min_st.pop();
+        }
+    }
+    
+    void push(int x) {
+        st.push(x); //将元素压栈
+        if (min_st.empty() || x <= min_st.top()) { //最小栈空或者当前元素比栈顶元素更小，则压入最小栈
+            min_st.push(x);
+        }
+    }
+    
+    void pop() {
+        if (!min_st.empty() && st.top() == min_st.top()) { //最小栈非空且最小栈栈顶元素和栈顶元素相同，则最小栈栈顶元素同时出栈
+            min_st.pop();
+        }
+        if (!st.empty()) { //栈非空，则栈顶元素出栈
+            st.pop();
+        }
+    }
+    
+    int top() {
+        if (!st.empty()) { //访问栈顶元素
+            return st.top();
+        }
+        return -1;
+    }
+    
+    int min() {
+        if (!min_st.empty()) { //访问栈内最小元素，即最小栈栈顶元素
+            return min_st.top();
+        }
+        return -1;
+    }
+};
+
+/**
+ * Your MinStack object will be instantiated and called as such:
+ * MinStack* obj = new MinStack();
+ * obj->push(x);
+ * obj->pop();
+ * int param_3 = obj->top();
+ * int param_4 = obj->min();
+ */
+```
+
+## [剑指 Offer 59 - I. 滑动窗口的最大值](https://leetcode.cn/problems/hua-dong-chuang-kou-de-zui-da-zhi-lcof/)
+
+### 解法1：单调队列
+
+$$
+O(n)+O(k)
+$$
+
+```C++
+class Solution {
+public:
+    vector<int> maxSlidingWindow(vector<int>& nums, int k) {
+        deque<int> q; //双端队列，存位置；双端队列头部永远存的是当前滑动窗口的最大值
+        vector<int> result; //存放各滑动窗口的最大值
+        
+        for (int i = 0; i < nums.size(); i++) {
+            //访问 0或i-k+1 到 i 的滑动窗口的数组
+            if (!q.empty() && q.front() < i - k + 1) { //若双端队列第一个数的位置不在范围内，将其移出
+                q.pop_front();
+            }
+            while (!q.empty() && nums[q.back()] <= nums[i]) { //当双端队列最后一个数比当前位置的数要小时，则后续滑动窗口继续右移时，滑动窗口内最大的数必然大于等于当前位置的数，故可以直接将双端队列最后的数移出
+                q.pop_back();
+            }
+            q.push_back(i); //将当前位置的数移入双端队列
+            if (i >= k - 1) { //当滑动敞口大小为k时，将最大值存入结果数组
+                result.push_back(nums[q.front()]);
+            }
+        }
+        ;
+
+        return result;
+    }
+};
+```
+
+## [剑指 Offer 59 - II. 队列的最大值](https://leetcode.cn/problems/dui-lie-de-zui-da-zhi-lcof/)
+
+### 解法1：单调队列
+
+$$
+O(1)+O(n)
+$$
+
+```C++
+class MaxQueue {
+    queue<int> que;
+    deque<int> maxQue;
+public:
+    MaxQueue() {
+        while (!que.empty()) {
+            que.pop();
+        }
+        while (!maxQue.empty()) {
+            maxQue.pop_front();
+        }
+    }
+    
+    int max_value() {
+        if (maxQue.empty()) {
+            return -1;
+        }
+        else {
+            return maxQue.front();
+        }
+    }
+    
+    void push_back(int value) {
+        que.push(value);
+        while (!maxQue.empty() && maxQue.back() < value) {
+            maxQue.pop_back();
+        }
+        maxQue.push_back(value);
+    }
+    
+    int pop_front() {
+        if (que.empty()) {
+            return -1;
+        }
+        else {
+            if (que.front() == maxQue.front()) {
+                maxQue.pop_front();
+            }
+            int x = que.front();
+            que.pop();
+            return x;
+        }
+    }
+};
+
+/**
+ * Your MaxQueue object will be instantiated and called as such:
+ * MaxQueue* obj = new MaxQueue();
+ * int param_1 = obj->max_value();
+ * obj->push_back(value);
+ * int param_3 = obj->pop_front();
+ */
+```
+
+# 模拟
+
+## [剑指 Offer 29. 顺时针打印矩阵](https://leetcode.cn/problems/shun-shi-zhen-da-yin-ju-zhen-lcof/)
+
+### 解法1：模拟
+
+$$
+O(mn)+O(1)
+$$
+
+```C++
+class Solution {
+public:
+    vector<int> spiralOrder(vector<vector<int>>& matrix) {
+        if (matrix.size() == 0 || matrix[0].size() == 0) {
+            return vector<int>{};
+        }
+        int m = matrix.size(), n = matrix[0].size(); //记录矩阵的行数和列数
+        vector<int> v; //结果数组
+        int u = 0, d = m - 1, l = 0, r = n - 1; //记录当前要处理的最上行，最下行，最左行，最右行
+        while (u <= d && l <= r) { //当最上行和最下行，最左行和最右行未相遇时，继续处理
+            for (int i = l; i <= r; i++) { //处理最上行
+                v.push_back(matrix[u][i]);
+            }
+            if (++u > d) { //最上行下移，且当与最下行相遇时，退出循环
+                break;
+            }
+            for (int i = u; i <= d; i++) { //处理最右行
+                v.push_back(matrix[i][r]);
+            }
+            if (--r < l) { //最右行左移，且当与最左行相遇时，退出循环
+                break;
+            }
+            for (int i = r; i >= l; i--) { //处理最下行
+                v.push_back(matrix[d][i]);
+            }
+            if (--d < u) {
+                break; //最下行上移，且当与最上行相遇时，退出循环
+            }
+            for (int i = d; i >= u; i--) { //处理最左行
+                v.push_back(matrix[i][l]);
+            }
+            if (++l > r) {
+                break; //最左行右移，且当与最右行相遇时，退出循环
+            }
+        }
+
+        return v;
+    }
+};
+```
+
+## [剑指 Offer 31. 栈的压入、弹出序列](https://leetcode.cn/problems/zhan-de-ya-ru-dan-chu-xu-lie-lcof/)
+
+### 解法1：模拟
+
+$$
+O(n)+O(n)
+$$
+
+```C++
+class Solution {
+public:
+    bool validateStackSequences(vector<int>& pushed, vector<int>& popped) {
+        stack<int> st;
+        int i, j;
+        for (i = 0, j = 0; i < pushed.size(); i++) {
+            if (pushed[i] == popped[j]) {
+                j++;
+                while (!st.empty() && st.top() == popped[j]) {
+                    st.pop();
+                    j++;
+                }
+            }
+            else {
+                st.push(pushed[i]);
+            }
+        }
+         while (!st.empty() && st.top() == popped[j]) {
+            st.pop();
+            j++;
+        }
+        if (j == popped.size()) {
+            return true;
+        }
+        else {
+            return false;
+        }
+    }
+};
+```
+
+# 查找算法
 
 ##==[剑指 Offer 03. 数组中重复的数字](https://leetcode.cn/problems/shu-zu-zhong-zhong-fu-de-shu-zi-lcof/)==
 
-### 解法1：哈希表
+### 解法1：哈希
+
+$$
+O(n)+O(n)
+$$
 
 ```C++
 class Solution {
 public:
     int findRepeatNumber(vector<int>& nums) {
-        vector<int> count(100010,0);
-        for(int i=0;i<nums.size();i++)
-            if(count[nums[i]]++) return nums[i];
-        return -1;
+        vector<int> count(100010, 0);
+        for (int i = 0; i < nums.size(); i++) {
+            if (count[nums[i]]++) {
+                return nums[i];
+            }
+        }
+        return 0;
     }
 };
 ```
-
-### 解法2：set容器
 
 ```C++
 class Solution {
 public:
     int findRepeatNumber(vector<int>& nums) {
         unordered_set<int> Set;
-        for(int i=0;i<nums.size();i++){
-            if(Set.find(nums[i])!=Set.end()) return nums[i];
-            else Set.insert(nums[i]);
+        for (int i = 0; i < nums.size(); i++) {
+            if (Set.find(nums[i]) != Set.end()) {
+                return nums[i];
+            }
+            else {
+                Set.insert(nums[i]);
+            }
         }
         return -1;
     }
@@ -40,11 +990,11 @@ public:
 
 在C++中，set 和 map 分别提供以下三种数据结构，其底层实现以及优劣如下表所示：
 
-|集合|底层实现|是否有序|数值是否可以重复|能够更改数值|查询效率|增删效率|
-| :----| ------------| -----------| ---------------| ----------------- | ----------- |------------|
-|std::set|红黑树|有序|否|否|O(log n)|O(log n)|
-|std::multiset|红黑树|有序|是|是|O(log n)|O(log n)|
-|std::unordered_set|红黑树|无序|否|否|O(1)|O(1)|
+| 集合               | 底层实现 | 是否有序 | 数值是否可以重复 | 能够更改数值 | 查询效率 | 增删效率 |
+| :----------------- | -------- | -------- | ---------------- | ------------ | -------- | -------- |
+| std::set           | 红黑树   | 有序     | 否               | 否           | O(log n) | O(log n) |
+| std::multiset      | 红黑树   | 有序     | 是               | 是           | O(log n) | O(log n) |
+| std::unordered_set | 红黑树   | 无序     | 否               | 否           | O(1)     | O(1)     |
 
 std::unordered_set底层实现为哈希表，std::set 和std::multiset 的底层实现是红黑树，红黑树是一种平衡二叉搜索树，所以key值是有序的，但key不可以修改，改动key值会导致整棵树的错乱，所以只能删除和增加。
 
@@ -147,9 +1097,78 @@ int main() {
 }
 ```
 
+## [剑指 Offer 53 - I. 在排序数组中查找数字 I](https://leetcode.cn/problems/zai-pai-xu-shu-zu-zhong-cha-zhao-shu-zi-lcof/)
+
+### 解法1：二分查找
+
+$$
+O(\log n)=O(1)
+$$
+
+```C++
+class Solution {
+public:
+    int search(vector<int>& nums, int target) {
+        if (nums.size() == 0) {
+            return 0;
+        }
+        int left1 = 0, right1 = nums.size() - 1;
+        while (left1 < right1) { //查找该数出现的第一个位置
+            int mid = left1 + right1 >> 1;
+            if (nums[mid] >= target) {
+                right1 = mid;
+            }
+            else {
+                left1 = mid + 1;
+            }
+        }
+        if (nums[left1] != target) { //找到的数不是目标数，说明数组中目标数出现的次数为0
+            return 0;
+        }
+        int left2 = 0, right2 = nums.size() - 1;
+        while (left2 < right2) {
+            int mid = left2 + right2 + 1 >> 1;
+            if (nums[mid] <= target) {
+                left2 = mid;
+            }
+            else {
+                right2 = mid - 1;
+            }
+        }
+        return left2 - left1 + 1;
+    }
+};
+```
+
+## [剑指 Offer 53 - II. 0～n-1中缺失的数字](https://leetcode.cn/problems/que-shi-de-shu-zi-lcof/)
+
+### 解法1：直接遍历
+
+$$
+O(n)+O(1)
+$$
+
+```C++
+class Solution {
+public:
+    int missingNumber(vector<int>& nums) {
+        for (int i = 0; i < nums.size(); i++) {
+            if (i != nums[i]) {
+                return i;
+            }
+        }
+        return nums.size();
+    }
+};
+```
+
 ## ==[剑指 Offer 04. 二维数组中的查找](https://leetcode.cn/problems/er-wei-shu-zu-zhong-de-cha-zhao-lcof/)==
 
 ### 解法1：二分查找
+
+$$
+O(m\log n)+O(1)
+$$
 
 ```C++
 class Solution {
@@ -168,18 +1187,28 @@ public:
 
 ### 解法2：Z字形查找
 
-旋转45°，类似二叉搜索树的找法，为最优解
+$$
+O(m+n)+O(1)
+$$
 
 ```c++
 class Solution {
 public:
     bool findNumberIn2DArray(vector<vector<int>>& matrix, int target) {
-        if(matrix.size()==0||matrix[0].size()==0) return false;
-        int i=0,j=matrix[0].size()-1;
-        while(i<matrix.size()&&j>=0){
-            if(matrix[i][j]==target) return true;
-            else if(matrix[i][j]<target) i++;
-            else j--;
+        if (matrix.size() == 0 || matrix[0].size() == 0) {
+            return false;
+        }
+        int i = 0, j = matrix[0].size() - 1;
+        while (i < matrix.size() && j >= 0) {
+            if (matrix[i][j] == target) {
+                return true;
+            }
+            else if (matrix[i][j] < target) {
+                i++;
+            }
+            else {
+                j--;
+            }
         }
         return false;
     }
@@ -364,68 +1393,74 @@ double bsearch_3(double l, double r)
    7
    ```
 
-## [剑指 Offer 05. 替换空格](https://leetcode.cn/problems/ti-huan-kong-ge-lcof/)
+## [剑指 Offer 11. 旋转数组的最小数字](https://leetcode.cn/problems/xuan-zhuan-shu-zu-de-zui-xiao-shu-zi-lcof/)
 
-### 解法1
+### 解法1：二分查找
+
+$$
+平均时间复杂度：O(\log n)；上限时间复杂度：O(n)
+$$
+
+$$
+空间复杂度：O(1)
+$$
 
 ```C++
 class Solution {
 public:
-    string replaceSpace(string s) {        
-        string array;
-        for(auto &c : s)
-            if(c == ' ') array+="%20";
-            else array.push_back(c);
-        return array;
-    }
-};
-```
-
-## ==[剑指 Offer 06. 从尾到头打印链表](https://leetcode.cn/problems/cong-wei-dao-tou-da-yin-lian-biao-lcof/)==
-
-### 解法1
-
-```C++
-/**
- * Definition for singly-linked list.
- * struct ListNode {
- *     int val;
- *     ListNode *next;
- *     ListNode(int x) : val(x), next(NULL) {}
- * };
- */
-class Solution {
-public:
-    vector<int> reversePrint(ListNode* head) {
-        ListNode* node=head;
-        vector<int> result;
-        while(node!=NULL){
-            result.push_back(node->val);
-            node=node->next;
+    int minArray(vector<int>& numbers) {
+        int left = 0, right = numbers.size() - 1;
+        while (left < numbers.size() && numbers[left] == numbers[right]) { //若首尾元素相同，则右移left至两元素不同，避免下面的算法出错
+            left++;
         }
-        reverse(result.begin(),result.end());
-        return result;
+        if (left == numbers.size()) { //最坏的情况，所有元素都相同，时间复杂度退化至O(n)
+            return numbers[0];
+        }
+        while (left < right) {
+            int mid = left + (right - left) / 2;
+            if (numbers[mid] <= numbers[numbers.size()-1]) {
+                right = mid;
+            }
+            else {
+                left = mid + 1;
+            }
+        }
+        return numbers[left];
     }
 };
 ```
 
-### ==笔记：`reverse()`==
+## [剑指 Offer 50. 第一个只出现一次的字符](https://leetcode.cn/problems/di-yi-ge-zhi-chu-xian-yi-ci-de-zi-fu-lcof/)
+
+### 解法1：哈希
+
+$$
+O(n)+O(n)
+$$
 
 ```C++
-//翻转数组
-//头文件
-#include <algorithm>
-//使用方法
-reverse(a, a+n);//n为数组中的元素个数
-
-//翻转字符串
-//用法为
-reverse(str.begin(), str.end());
-
-//翻转向量
-//用法
-reverse(vec.begin(), vec.end());
+class Solution {
+public:
+    char firstUniqChar(string s) {
+        unordered_map<char, int> hash;
+        for (int i = 0; i < s.length(); i++) {
+            hash[s[i]]++;
+        }
+        for (int i = 0; i < s.length(); i++) {
+            if (hash[s[i]] == 1) {
+                return s[i];
+            }
+        }
+        return ' ';
+    }
+};
 ```
+
+# 搜索与回溯算法
+
+# 分治算法
+
+
 
 ## [剑指 Offer 07. 重建二叉树](https://leetcode.cn/problems/zhong-jian-er-cha-shu-lcof/)
 
@@ -543,46 +1578,6 @@ public:
 };
 ```
 
-## [剑指 Offer 09. 用两个栈实现队列](https://leetcode.cn/problems/yong-liang-ge-zhan-shi-xian-dui-lie-lcof/)
-
-### 解法1
-
-```C++
-class CQueue {
-private:
-    stack<int> s1,s2;  //s1用来出队,s2用来入队
-public:
-    CQueue() {
-        while(!s1.empty()) s1.pop();
-        while(!s2.empty()) s2.pop();
-    }
-    
-    void appendTail(int value) {
-        s2.push(value); //入队直接入到s2
-    }
-    
-    int deleteHead() {
-        if(s1.empty()&&s2.empty()) return -1;  //在两个栈都是空的情况下返回-1
-        else if(s1.empty()){  //如果s1为空，则将s2中所有元素依次加入到s1中
-            while(!s2.empty()){
-                s1.push(s2.top());
-                s2.pop();
-            }
-        }
-        int x=s1.top();  //s1栈顶元素出栈，完场出队操作
-        s1.pop();
-        return x;
-    }
-};
-
-/**
- * Your CQueue object will be instantiated and called as such:
- * CQueue* obj = new CQueue();
- * obj->appendTail(value);
- * int param_2 = obj->deleteHead();
- */
-```
-
 ## [剑指 Offer 10- I. 斐波那契数列](https://leetcode.cn/problems/fei-bo-na-qi-shu-lie-lcof/)
 
 ### 解法1
@@ -617,27 +1612,6 @@ public:
         for(int i=2;i<=n;i++)
             f[i]=(f[i-2]+f[i-1])%N;
         return f[n];
-    }
-};
-```
-
-## [剑指 Offer 11. 旋转数组的最小数字](https://leetcode.cn/problems/xuan-zhuan-shu-zu-de-zui-xiao-shu-zi-lcof/)
-
-### 解法1：二分查找
-
-```C++
-class Solution {
-public:
-    int minArray(vector<int>& numbers) {
-        int l=0,r=numbers.size()-1;
-        while(l<numbers.size()&&numbers[l]==numbers[numbers.size()-1]) l++;
-        if(l==numbers.size()) return numbers[0];
-        while(l<r){
-            int mid=l+(r-l)/2;
-            if(numbers[mid]<=numbers[numbers.size()-1]) r=mid;
-            else l=mid+1;
-        }
-        return numbers[l];
     }
 };
 ```
@@ -798,38 +1772,6 @@ public:
 };
 ```
 
-## [剑指 Offer 18. 删除链表的节点](https://leetcode.cn/problems/shan-chu-lian-biao-de-jie-dian-lcof/)
-
-### 解法1
-
-```C++
-/**
- * Definition for singly-linked list.
- * struct ListNode {
- *     int val;
- *     ListNode *next;
- *     ListNode(int x) : val(x), next(NULL) {}
- * };
- */
-class Solution {
-public:
-    ListNode* deleteNode(ListNode* head, int val) {
-        ListNode* dummyHead=new ListNode(0);  //添加链表虚拟头结点
-        dummyHead->next=head;
-        ListNode *pre=dummyHead,*p=head;
-        while(p){
-            if(p->val==val){
-                pre->next=p->next;
-                break;
-            }
-            pre=pre->next;
-            p=p->next;
-        }
-        return dummyHead->next;
-    }
-};
-```
-
 ## ==[剑指 Offer 19. 正则表达式匹配](https://leetcode.cn/problems/zheng-ze-biao-da-shi-pi-pei-lcof/)==
 
 ### 解法1：动态规划（待记忆）
@@ -851,178 +1793,6 @@ public:
             }
         }
         return dp[m][n];
-    }
-};
-```
-
-## ==[剑指 Offer 20. 表示数值的字符串](https://leetcode.cn/problems/biao-shi-shu-zhi-de-zi-fu-chuan-lcof/)==
-
-### 解法1：一步一步debug（待记忆）
-
-```C++
-class Solution {
-public:
-    bool isNumber(string s) {
-        //先去掉s前后的空格
-        string str;
-        int i=0,j=s.length()-1;
-        while(i<s.length()&&s[i]==' ') i++;
-        while(j>=0&&s[j]==' ') j--;
-        for(int k=i;k<=j;k++) str+=s[k];
-        if(str.length()==0) return false;
-
-        //若字符串开始为+/-号，后移一位
-        int index=0;
-        if(str[index]=='+'||str[index]=='-') index++;
-        if(index==str.length()) return false;//字符串只有一个+/-号，结果为false
-
-        //检查字符串直到遇见第一个./e/E符号退出
-        while(index<str.length()&&str[index]!='.'&&str[index]!='e'&&str[index]!='E'){
-            if(str[index]<'0'||str[index]>'9') return false;//中途出现空格或其他符号,结果为false
-            else index++;
-        }
-
-        //根据第一个循环结果决定下一步操作
-        if(index==str.length()) return true;//字符串表示整数，结果为true
-        else if(str[index]=='.'){//遇见小数点.
-            if(index>0&&str[index-1]>='0'&&str[index-1]<='9');//小数点前面至少一位数字
-            else if(index+1==str.length()||str[index+1]<'0'||str[index+1]>'9') return false;//小数点前面没数字，后面也没数字（两种情况：后面没字符，或字符为空格或其他符号）
-            index++;
-        }
-
-        //如果第一个环结束在e/E，则该循环不执行；如果第一个循环结束在小数点并跳一位后，则继续寻找e/E
-        while(index<str.length()&&str[index]!='e'&&str[index]!='E'){
-            if(str[index]<'0'||str[index]>'9') return false;//中途出现空格或其他符号,结果为false
-            else index++;
-        }
-
-        //根据第二个循环结果决定下一步操作
-        if(index==str.length()) return true;//字符串表示整数或小数（不带e/E）
-        else{
-            if(index>0&&(str[index-1]>='0'&&str[index-1]<='9'||str[index-1]=='.'));//e/E前面至少一位数字或小数点
-            else if(index>=0||index==str.length()-1) return false;//e/E前面有不是数字或小数点的字符，或e/E后面连一位数字都没有
-            index++;
-        }
-
-        if(str[index]=='+'||str[index]=='-') index++;//e/E后面是+/-号，后移一位
-        if(index==str.length()) return false;//e/E后面只有一个+/-号，结果为false
-        //第三个循环，确定e/E后面是整数，否则为false
-        while(index<str.length()){
-            if(str[index]<'0'||str[index]>'9') return false;
-            else index++;
-        }
-        return true;
-    }
-};
-```
-
-## [剑指 Offer 21. 调整数组顺序使奇数位于偶数前面](https://leetcode.cn/problems/diao-zheng-shu-zu-shun-xu-shi-qi-shu-wei-yu-ou-shu-qian-mian-lcof/)
-
-### 解法1：双指针
-
-```C++
-class Solution {
-public:
-    vector<int> exchange(vector<int>& nums) {
-        int i=0,j=nums.size()-1;
-        while(true){
-            while(i<j&&nums[i]%2==1) i++;
-            while(i<j&&nums[j]%2==0) j--;
-            if(i<j) swap(nums[i],nums[j]);
-            else break;
-        }
-        return nums;
-    }
-};
-```
-
-## [剑指 Offer 22. 链表中倒数第k个节点](https://leetcode.cn/problems/lian-biao-zhong-dao-shu-di-kge-jie-dian-lcof/)
-
-### 解法1:快慢指针
-
-```C++
-/**
- * Definition for singly-linked list.
- * struct ListNode {
- *     int val;
- *     ListNode *next;
- *     ListNode(int x) : val(x), next(NULL) {}
- * };
- */
-class Solution {
-public:
-    ListNode* getKthFromEnd(ListNode* head, int k) {
-        ListNode *p=head,*q=head;
-        while(k--&&q!=NULL) q=q->next;
-        if(k>=0) return NULL;
-        while(q!=NULL){
-            p=p->next;
-            q=q->next;
-        }
-        return p;
-    }
-};
-```
-
-## [剑指 Offer 24. 反转链表](https://leetcode.cn/problems/fan-zhuan-lian-biao-lcof/)
-
-### 解法1：头插法
-
-```C++
-/**
- * Definition for singly-linked list.
- * struct ListNode {
- *     int val;
- *     ListNode *next;
- *     ListNode(int x) : val(x), next(NULL) {}
- * };
- */
-class Solution {
-public:
-    ListNode* reverseList(ListNode* head) {
-        ListNode* dummyHead=new ListNode(0),*p;
-        while(head){
-            p=head;
-            head=head->next;
-            p->next=dummyHead->next;
-            dummyHead->next=p;
-        }
-        return dummyHead->next;
-    }
-};
-```
-
-## [剑指 Offer 25. 合并两个排序的链表](https://leetcode.cn/problems/he-bing-liang-ge-pai-xu-de-lian-biao-lcof/)
-
-### 解法1：归并
-
-```C++
-/**
- * Definition for singly-linked list.
- * struct ListNode {
- *     int val;
- *     ListNode *next;
- *     ListNode(int x) : val(x), next(NULL) {}
- * };
- */
-class Solution {
-public:
-    ListNode* mergeTwoLists(ListNode* l1, ListNode* l2) {
-        ListNode *dummyHead=new ListNode(0),*p=dummyHead;
-        while(l1&&l2){
-            if(l1->val<=l2->val){
-                p->next=l1;
-                l1=l1->next;
-            }
-            else{
-                p->next=l2;
-                l2=l2->next;
-            }
-            p=p->next;
-        }
-        if(l1) p->next=l1;
-        else p->next=l2;
-        return dummyHead->next;
     }
 };
 ```
@@ -1174,109 +1944,6 @@ public:
             else if(left_node->val!=right_node->val) return false;
             que.push(left_node->left),que.push(right_node->right);
             que.push(left_node->right),que.push(right_node->left);
-        }
-        return true;
-    }
-};
-```
-
-## [剑指 Offer 29. 顺时针打印矩阵](https://leetcode.cn/problems/shun-shi-zhen-da-yin-ju-zhen-lcof/)
-
-### 解法1：模拟
-
-```C++
-class Solution {
-public:
-    vector<int> spiralOrder(vector<vector<int>>& matrix) {
-        if(matrix.size()==0||matrix[0].size()==0) return {};
-        int m=matrix.size(),n=matrix[0].size();
-        vector<int> v;
-        int u=0,d=m-1,l=0,r=n-1;
-        while(u<=d&&l<=r)
-        {
-            for(int i=l;i<=r;i++) v.push_back(matrix[u][i]);
-            if(++u>d) break;
-            for(int i=u;i<=d;i++) v.push_back(matrix[i][r]);
-            if(--r<l) break;
-            for(int i=r;i>=l;i--) v.push_back(matrix[d][i]);
-            if(--d<u) break;
-            for(int i=d;i>=u;i--) v.push_back(matrix[i][l]);
-            if(++l>r) break;
-        }
-
-        return v;
-    }
-};
-```
-
-## [剑指 Offer 30. 包含min函数的栈](https://leetcode.cn/problems/bao-han-minhan-shu-de-zhan-lcof/)
-
-### 解法1
-
-```C++
-class MinStack {
-    stack<int> st,min_st;
-public:
-    /** initialize your data structure here. */
-    MinStack() {
-        while(!st.empty()) st.pop();
-        while(!min_st.empty()) min_st.pop();
-    }
-    
-    void push(int x) {
-        st.push(x);
-        if(min_st.empty()||x<=min_st.top()) min_st.push(x);
-    }
-    
-    void pop() {
-        if(!min_st.empty()&&st.top()==min_st.top()) min_st.pop();
-        if(!st.empty()) st.pop();
-    }
-    
-    int top() {
-        if(!st.empty()) return st.top();
-        return -1;
-    }
-    
-    int min() {
-        if(!min_st.empty()) return min_st.top();
-        return -1;
-    }
-};
-
-/**
- * Your MinStack object will be instantiated and called as such:
- * MinStack* obj = new MinStack();
- * obj->push(x);
- * obj->pop();
- * int param_3 = obj->top();
- * int param_4 = obj->min();
- */
-```
-
-## [剑指 Offer 31. 栈的压入、弹出序列](https://leetcode.cn/problems/zhan-de-ya-ru-dan-chu-xu-lie-lcof/)
-
-### 解法1
-
-```C++
-class Solution {
-public:
-    bool validateStackSequences(vector<int>& pushed, vector<int>& popped) {
-        int i=0,j=0;
-        stack<int> st;
-        while(i<pushed.size()){
-            if(i<pushed.size()&&pushed[i]!=popped[j]){
-                if(!st.empty()&&st.top()==popped[j]) st.pop(),j++;
-                else st.push(pushed[i]),i++;
-            }
-            else i++,j++;
-        }
-        while(!st.empty()){
-            if(st.top()==popped[j]){
-                st.pop();
-                j++;
-            }
-            else return false;
         }
         return true;
     }
@@ -1462,86 +2129,6 @@ public:
             path.pop_back();
         }
         return res;
-    }
-};
-```
-
-## [剑指 Offer 35. 复杂链表的复制](https://leetcode.cn/problems/fu-za-lian-biao-de-fu-zhi-lcof/)
-
-### 解法1：回溯+哈希表（O(n)+O(n)）
-
-```C++
-/*
-// Definition for a Node.
-class Node {
-public:
-    int val;
-    Node* next;
-    Node* random;
-    
-    Node(int _val) {
-        val = _val;
-        next = NULL;
-        random = NULL;
-    }
-};
-*/
-class Solution {
-public:
-    unordered_map<Node*,Node*> cachedNode;
-    Node* copyRandomList(Node* head) {
-        if(head==NULL) return NULL;
-        else if(cachedNode.count(head)==NULL){
-            Node* newHead=new Node(head->val);
-            cachedNode[head]=newHead;
-            newHead->next=copyRandomList(head->next);
-            newHead->random=copyRandomList(head->random);
-        }
-        return cachedNode[head];
-    }
-};
-```
-
-### 解法2：迭代+节点拆分（O(n)+O(1)）
-
-```C++
-/*
-// Definition for a Node.
-class Node {
-public:
-    int val;
-    Node* next;
-    Node* random;
-    
-    Node(int _val) {
-        val = _val;
-        next = NULL;
-        random = NULL;
-    }
-};
-*/
-class Solution {
-public:
-    Node* copyRandomList(Node* head) {
-        if(head==NULL) return NULL;
-        for(Node* node=head;node!=NULL;node=node->next->next){
-            Node* newNode=new Node(node->val);
-            newNode->next=node->next;
-            node->next=newNode;
-        }
-        for(Node* node=head;node!=NULL;node=node->next->next){
-            Node* newNode=node->next;
-            if(node->random) newNode->random=node->random->next;
-            else newNode->random=NULL;
-        }
-        Node* newHead=head->next;
-        for(Node* node=head;node!=NULL;node=node->next){
-            Node* newNode=node->next;
-            node->next=newNode->next;
-            if(newNode->next) newNode->next=newNode->next->next;
-            else newNode->next=NULL;
-        }
-        return newHead;
     }
 };
 ```
@@ -2090,97 +2677,7 @@ public:
 };
 ```
 
-## [剑指 Offer 50. 第一个只出现一次的字符](https://leetcode.cn/problems/di-yi-ge-zhi-chu-xian-yi-ci-de-zi-fu-lcof/)
-
-### 解法1：哈希表
-
-```C++
-class Solution {
-public:
-    char firstUniqChar(string s) {
-        unordered_map<char,int> m;
-        for(int i=0;i<s.length();i++) m[s[i]]++;
-        for(int i=0;i<s.length();i++)
-            if(m[s[i]]==1) return s[i];
-        return ' ';
-    }
-};
-```
-
 ## [剑指 Offer 51. 数组中的逆序对](https://leetcode.cn/problems/shu-zu-zhong-de-ni-xu-dui-lcof/)（==待做==）
-
-## [剑指 Offer 52. 两个链表的第一个公共节点](https://leetcode.cn/problems/liang-ge-lian-biao-de-di-yi-ge-gong-gong-jie-dian-lcof/)
-
-### 解法1
-
-```C++
-/**
- * Definition for singly-linked list.
- * struct ListNode {
- *     int val;
- *     ListNode *next;
- *     ListNode(int x) : val(x), next(NULL) {}
- * };
- */
-class Solution {
-public:
-    ListNode *getIntersectionNode(ListNode *headA, ListNode *headB) {
-        ListNode *p=headA,*q=headB;
-        int m=0,n=0;
-        while(p!=NULL) p=p->next,m++;
-        while(q!=NULL) q=q->next,n++;
-        int k;
-        if(m>=n) p=headA,q=headB,k=m-n;
-        else p=headB,q=headA,k=n-m;
-        while(k--) p=p->next;
-        while(p!=q) p=p->next,q=q->next;
-        if(p!=NULL) return p;
-        else return NULL;
-    }
-};
-```
-
-## [剑指 Offer 53 - I. 在排序数组中查找数字 I](https://leetcode.cn/problems/zai-pai-xu-shu-zu-zhong-cha-zhao-shu-zi-lcof/)
-
-### 解法1
-
-```C++
-class Solution {
-public:
-    int search(vector<int>& nums, int target) {
-        if(nums.size()==0) return 0;
-        int l1=0,r1=nums.size()-1;
-        while(l1<r1){
-            int mid=l1+r1>>1;
-            if(nums[mid]>=target) r1=mid;
-            else l1=mid+1;
-        }
-        if(nums[l1]!=target) return 0;
-        int l2=0,r2=nums.size()-1;
-        while(l2<r2){
-            int mid=l2+r2+1>>1;
-            if(nums[mid]<=target) l2=mid;
-            else r2=mid-1;
-        }
-        return l2-l1+1;
-    }
-};
-```
-
-## [剑指 Offer 53 - II. 0～n-1中缺失的数字](https://leetcode.cn/problems/que-shi-de-shu-zi-lcof/)
-
-### 解法1
-
-```C++
-class Solution {
-public:
-    int missingNumber(vector<int>& nums) {
-        for(int i=0;i<nums.size();i++)
-            if(i!=nums[i]) return i;
-        return nums.size();
-    }
-};
-```
 
 ## [剑指 Offer 54. 二叉搜索树的第k大节点](https://leetcode.cn/problems/er-cha-sou-suo-shu-de-di-kda-jie-dian-lcof/)
 
@@ -2317,34 +2814,7 @@ public:
 };
 ```
 
-## [剑指 Offer 57. 和为s的两个数字](https://leetcode.cn/problems/he-wei-sde-liang-ge-shu-zi-lcof/)
-
-### 解法1：双指针
-
-```C++
-class Solution {
-public:
-    vector<int> twoSum(vector<int>& nums, int target) {
-        int i=0,j=nums.size()-1;
-        while(i<j){
-            if(nums[i]+nums[j]==target) break;
-            else if(nums[i]+nums[j]<target) i++;
-            else j--;
-        }
-        return vector<int>{nums[i],nums[j]};
-    }
-};
-```
-
 ## [剑指 Offer 57 - II. 和为s的连续正数序列](https://leetcode.cn/problems/he-wei-sde-lian-xu-zheng-shu-xu-lie-lcof/)（==待做==）
-
-## [剑指 Offer 58 - I. 翻转单词顺序](https://leetcode.cn/problems/fan-zhuan-dan-ci-shun-xu-lcof/)
-
-### 解法1
-
-```C++
-;
-```
 
 ## [剑指 Offer 64. 求1+2+…+n](https://leetcode.cn/problems/qiu-12n-lcof/)
 

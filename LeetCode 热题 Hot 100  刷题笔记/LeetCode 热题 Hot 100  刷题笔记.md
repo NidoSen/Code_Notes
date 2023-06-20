@@ -11,12 +11,14 @@ $$
 class Solution {
 public:
     vector<int> twoSum(vector<int>& nums, int target) {
-        unordered_map<int,int> hash;
-        for(int i=0;i<nums.size();i++)
-        {
-            auto it=hash.find(target-nums[i]);
-            if(it!=hash.end()) return {it->second,i};
-            hash.insert({nums[i],i});
+        unordered_map<int, int> hash;
+        for (int i = 0; i < nums.size(); i ++) {
+            if (hash.find(target - nums[i]) == hash.end()) {
+                hash[nums[i]] = i;
+            }
+            else {
+                return vector<int>{hash[target - nums[i]], i};
+            }
         }
         return vector<int>();
     }
@@ -1421,7 +1423,7 @@ public:
 ### 解法1：回溯+哈希
 
 $$
-O(n)+O(1)
+O(n)+O(n)
 $$
 
 ```C++
