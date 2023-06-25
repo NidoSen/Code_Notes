@@ -1,5 +1,3 @@
-
-
 # 字符串
 
 ## [剑指 Offer 05. 替换空格](https://leetcode.cn/problems/ti-huan-kong-ge-lcof/)
@@ -1458,501 +1456,13 @@ public:
 
 # 搜索与回溯算法
 
-# 分治算法
-
-
-
-## [剑指 Offer 07. 重建二叉树](https://leetcode.cn/problems/zhong-jian-er-cha-shu-lcof/)
-
-### 解法1：递归+分治
-
-```C++
-/**
- * Definition for a binary tree node.
- * struct TreeNode {
- *     int val;
- *     TreeNode *left;
- *     TreeNode *right;
- *     TreeNode(int x) : val(x), left(NULL), right(NULL) {}
- * };
- */
-class Solution {
-public:
-    vector<int> pre_order,in_order;
-    TreeNode* traversal(int l1,int r1,int l2,int r2)
-    {
-        if(l1>r1||l2>r2) return NULL;
-        int mid;
-        for(mid=l2;mid<=r2;mid++)
-            if(in_order[mid]==pre_order[l1]) break;
-        int len1=mid-l2;
-        TreeNode *node=new TreeNode(pre_order[l1]);
-        node->left=traversal(l1+1,l1+len1,l2,mid-1);
-        node->right=traversal(l1+len1+1,r1,mid+1,r2);
-        return node;
-    }
-    TreeNode* buildTree(vector<int>& preorder, vector<int>& inorder) {
-        pre_order=preorder,in_order=inorder;
-        int l1=0,r1=preorder.size()-1,l2=0,r2=inorder.size()-1;
-        TreeNode *root=traversal(l1,r1,l2,r2);
-        return root;
-    }
-};
-```
-
-### 解法2：递归+分治（使用map容器优化）
-
-```C++
-/**
- * Definition for a binary tree node.
- * struct TreeNode {
- *     int val;
- *     TreeNode *left;
- *     TreeNode *right;
- *     TreeNode(int x) : val(x), left(NULL), right(NULL) {}
- * };
- */
-class Solution {
-public:
-    vector<int> pre_order,in_order;
-    map<int,int> index; //index为map容易，用于记录中序遍历位置
-    TreeNode* traversal(int l1,int r1,int l2,int r2)
-    {
-        if(l1>r1||l2>r2) return NULL;
-        int mid=index[pre_order[l1]]; //使用index直接得到mid的位置
-        int len1=mid-l2;
-        TreeNode *node=new TreeNode(pre_order[l1]);
-        node->left=traversal(l1+1,l1+len1,l2,mid-1);
-        node->right=traversal(l1+len1+1,r1,mid+1,r2);
-        return node;
-    }
-    TreeNode* buildTree(vector<int>& preorder, vector<int>& inorder) {
-        pre_order=preorder,in_order=inorder;
-        for(int i=0;i<inorder.size();i++) index[inorder[i]]=i;  //index记录中序遍历每个数的位置
-        int l1=0,r1=preorder.size()-1,l2=0,r2=inorder.size()-1;
-        TreeNode *root=traversal(l1,r1,l2,r2);
-        return root;
-    }
-};
-```
-
-### 解法3：迭代（待理解）
-
-```C++
-/**
- * Definition for a binary tree node.
- * struct TreeNode {
- *     int val;
- *     TreeNode *left;
- *     TreeNode *right;
- *     TreeNode(int x) : val(x), left(NULL), right(NULL) {}
- * };
- */
-class Solution {
-public:
-    TreeNode* buildTree(vector<int>& preorder, vector<int>& inorder) {
-        if(preorder.size()==0) return NULL;
-        TreeNode* root=new TreeNode(preorder[0]);
-        stack<TreeNode*> st;
-        int indexInorder=0;
-        st.push(root);
-        for(int i=1;i<preorder.size();i++){
-            int preorderValue=preorder[i];
-            TreeNode* node=st.top();
-            if(node->val!=inorder[indexInorder]){
-                node->left=new TreeNode(preorder[i]);
-                st.push(node->left);
-            }
-            else{
-                while(!st.empty()&&st.top()->val==inorder[indexInorder]){
-                    node=st.top();
-                    st.pop();
-                    indexInorder++;
-                }
-                node->right=new TreeNode(preorderValue);
-                st.push(node->right);
-            }
-        }
-        return root;
-    }
-};
-```
-
-## [剑指 Offer 10- I. 斐波那契数列](https://leetcode.cn/problems/fei-bo-na-qi-shu-lie-lcof/)
-
-### 解法1
-
-```C++
-class Solution {
-public:
-    int fib(int n) {
-        int N=1e9+7;
-        if(n<=1) return n;
-        int a=0,b=1;
-        for(int i=2;i<=n;i++){
-            int temp=b;
-            b=(a+b)%N;
-            a=temp;
-        }
-        return b;
-    }
-};
-```
-
-## [剑指 Offer 10- II. 青蛙跳台阶问题](https://leetcode.cn/problems/qing-wa-tiao-tai-jie-wen-ti-lcof/)
-
-### 解法1
-
-```C++
-class Solution {
-public:
-    int numWays(int n) {
-        int f[101],N=1e9+7;
-        f[0]=1,f[1]=1;
-        for(int i=2;i<=n;i++)
-            f[i]=(f[i-2]+f[i-1])%N;
-        return f[n];
-    }
-};
-```
-
-## [剑指 Offer 12. 矩阵中的路径](https://leetcode.cn/problems/ju-zhen-zhong-de-lu-jing-lcof/)
-
-### 解法1：DFS+剪枝
-
-```C++
-class Solution {
-public:
-    bool traversal(int x,int y,int index,vector<vector<char>>& board,string word, vector<vector<bool>>& visit){
-        if(index==word.length()-1&&board[x][y]==word[index]) return true;
-        else if(board[x][y]!=word[index]) return false;
-        int dx[]={0,1,0,-1};
-        int dy[]={1,0,-1,0};
-        for(int i=0;i<4;i++)
-            if(x+dx[i]>=0&&x+dx[i]<board.size()&&y+dy[i]>=0&&y+dy[i]<board[0].size())
-                if(visit[x+dx[i]][y+dy[i]]==false){
-                    visit[x+dx[i]][y+dy[i]]=true;
-                    if(traversal(x+dx[i],y+dy[i],index+1,board,word,visit)) return true;
-                    visit[x+dx[i]][y+dy[i]]=false;
-                }
-        return false;
-    }
-    bool exist(vector<vector<char>>& board, string word) {
-        vector<vector<bool>> visit(board.size(),vector<bool>(board[0].size(),false));
-        for(int i=0;i<board.size();i++)
-            for(int j=0;j<board[0].size();j++)
-                if(board[i][j]==word[0]){
-                    visit[i][j]=true;
-                    if(traversal(i,j,0,board,word,visit)==true) return true;
-                    visit[i][j]=false;
-                }
-        return false;
-    }
-};
-```
-
-## [剑指 Offer 14- I. 剪绳子](https://leetcode.cn/problems/jian-sheng-zi-lcof/)
-
-### 解法1
-
-```C++
-class Solution {
-public:
-    int cuttingRope(int n) {
-        if(n==2) return 1;
-        if(n==3) return 2;
-        if(n==4) return 4;
-        int result=1;
-        while(n>4){
-            result*=3;
-            n-=3;
-        }
-        result*=n;
-        return result;
-    }
-};
-```
-
-## [剑指 Offer 14- II. 剪绳子 II](https://leetcode.cn/problems/jian-sheng-zi-ii-lcof/)
-
-### 解法1
-
-```C++
-class Solution {
-public:
-    int cuttingRope(int n) {
-        int mod=1e9+7;
-        if(n==2) return 1;
-        if(n==3) return 2;
-        if(n==4) return 4;
-        int result=1;
-        while(n>4){
-            int temp=result;
-            result=(result+temp)%mod;
-            result=(result+temp)%mod;
-            n-=3;
-        }
-        int temp=result;
-        for(int i=0;i<n-1;i++) result=(result+temp)%mod;
-        return result;
-    }
-};
-```
-
-## [剑指 Offer 15. 二进制中1的个数](https://leetcode.cn/problems/er-jin-zhi-zhong-1de-ge-shu-lcof/)
-
-### 解法1：位运算
-
-```C++
-class Solution {
-public:
-    int hammingWeight(uint32_t n) {
-        int count=0;
-        while(n){
-            if(n&1) count++;
-            n>>=1;
-        }
-        return count;
-    }
-};
-```
-
-## ==[剑指 Offer 16. 数值的整数次方](https://leetcode.cn/problems/shu-zhi-de-zheng-shu-ci-fang-lcof/)==
-
-### 解法1：快速幂
-
-```C++
-class Solution {
-public:
-    double myPow(double x, int n) {
-        double result=1;
-        bool flag=true;
-        long long k=n;
-        if(k<0) flag=false,k=-(long long)n;
-        while(k){
-            if(k&1) result*=x;
-            x*=x;
-            k>>=1;
-        }
-        if(flag==false) result=1/result;
-        return result;
-    }
-};
-```
-
-### ==笔记：快速幂模板==
-
-```C++
-// 求m^k mod p, 时间复杂度为 O(log k)
-long long(int m,int k,int p){
-    long long res=1&p,t=m;
-    while(k){
-        if(k&1) res=res*t%p;
-        t=t*t;
-        k>>=1;
-    }
-    return res;
-}
-```
-
-## [剑指 Offer 17. 打印从1到最大的n位数](https://leetcode.cn/problems/da-yin-cong-1dao-zui-da-de-nwei-shu-lcof/)
-
-### 解法1
-
-```C++
-class Solution {
-public:
-    vector<int> printNumbers(int n) {
-        vector<int> res;
-        int count=0;
-        for(int i=0;i<n;i++) count=count*10+9;
-        for(int i=1;i<=count;i++) res.push_back(i);
-        return res;
-    }
-};
-```
-
-## ==[剑指 Offer 19. 正则表达式匹配](https://leetcode.cn/problems/zheng-ze-biao-da-shi-pi-pei-lcof/)==
-
-### 解法1：动态规划（待记忆）
-
-```C++
-class Solution {
-public:
-    bool isMatch(string s, string p) {
-        int m=s.size(),n=p.size();
-        vector<vector<bool>> dp(m+1,vector<bool>(n+1,false));
-        dp[0][0]=true;
-        for(int i=0;i<=m;i++){
-            for(int j=1;j<=n;j++){
-                if(i>=1&&(s[i-1]==p[j-1]||p[j-1]=='.')) dp[i][j]=dp[i-1][j-1];
-                else if(p[j-1]=='*'&&j>=2){
-                    dp[i][j]=dp[i][j]||dp[i][j-2];
-                    if(i>=1&&(s[i-1]==p[j-2]||p[j-2]=='.')) dp[i][j]=dp[i][j]||dp[i-1][j];
-                }
-            }
-        }
-        return dp[m][n];
-    }
-};
-```
-
-## ==[剑指 Offer 26. 树的子结构](https://leetcode.cn/problems/shu-de-zi-jie-gou-lcof/)==
-
-### 解法1：递归（背住）
-
-```C++
-/**
- * Definition for a binary tree node.
- * struct TreeNode {
- *     int val;
- *     TreeNode *left;
- *     TreeNode *right;
- *     TreeNode(int x) : val(x), left(NULL), right(NULL) {}
- * };
- */
-class Solution {
-public:
-    bool isSub(TreeNode* A, TreeNode* B){
-        if(B==NULL) return true;
-        else if(A==NULL||A->val!=B->val) return false;
-        return isSub(A->left,B->left)&&isSub(A->right,B->right);
-    }
-    bool isSubStructure(TreeNode* A, TreeNode* B) {
-        if(A==NULL||B==NULL) return false;
-        return isSub(A,B)||isSubStructure(A->left,B)||isSubStructure(A->right,B);
-    }
-};
-```
-
-## ==[剑指 Offer 27. 二叉树的镜像](https://leetcode.cn/problems/er-cha-shu-de-jing-xiang-lcof/)==
-
-### 解法1：递归
-
-```C++
-/**
- * Definition for a binary tree node.
- * struct TreeNode {
- *     int val;
- *     TreeNode *left;
- *     TreeNode *right;
- *     TreeNode(int x) : val(x), left(NULL), right(NULL) {}
- * };
- */
-class Solution {
-public:
-    TreeNode* mirrorTree(TreeNode* root) {
-        if(root==NULL) return NULL;
-        TreeNode* p=root->left;
-        root->left=mirrorTree(root->right);
-        root->right=mirrorTree(p);
-        return root;
-    }
-};
-```
-
-### 解法2：层序遍历
-
-```C++
-/**
- * Definition for a binary tree node.
- * struct TreeNode {
- *     int val;
- *     TreeNode *left;
- *     TreeNode *right;
- *     TreeNode() : val(0), left(nullptr), right(nullptr) {}
- *     TreeNode(int x) : val(x), left(nullptr), right(nullptr) {}
- *     TreeNode(int x, TreeNode *left, TreeNode *right) : val(x), left(left), right(right) {}
- * };
- */
-class Solution {
-public:
-    TreeNode* invertTree(TreeNode* root) {
-        queue<TreeNode*> que;
-        que.push(root);
-        while(!que.empty())
-        {
-            TreeNode* node=que.front();
-            que.pop();
-            if(node==NULL) continue;
-            swap(node->left,node->right);
-            que.push(node->left);
-            que.push(node->right);
-        }
-        return root;
-    }
-};
-```
-
-## ==[剑指 Offer 28. 对称的二叉树](https://leetcode.cn/problems/dui-cheng-de-er-cha-shu-lcof/)==
-
-### 解法1：递归
-
-```C++
-/**
- * Definition for a binary tree node.
- * struct TreeNode {
- *     int val;
- *     TreeNode *left;
- *     TreeNode *right;
- *     TreeNode(int x) : val(x), left(NULL), right(NULL) {}
- * };
- */
-class Solution {
-public:
-    bool isSym(TreeNode* leftNode,TreeNode* rightNode){
-        if(leftNode==NULL&&rightNode==NULL) return true;
-        else if(leftNode==NULL||rightNode==NULL) return false;
-        else if(leftNode->val!=rightNode->val) return false;
-        else return isSym(leftNode->left,rightNode->right)&&isSym(leftNode->right,rightNode->left);
-    }
-    bool isSymmetric(TreeNode* root) {
-        if(root==NULL) return true;
-        return isSym(root->left,root->right);
-    }
-};
-```
-
-### 解法2：层序遍历
-
-```C++
-/**
- * Definition for a binary tree node.
- * struct TreeNode {
- *     int val;
- *     TreeNode *left;
- *     TreeNode *right;
- *     TreeNode() : val(0), left(nullptr), right(nullptr) {}
- *     TreeNode(int x) : val(x), left(nullptr), right(nullptr) {}
- *     TreeNode(int x, TreeNode *left, TreeNode *right) : val(x), left(left), right(right) {}
- * };
- */
-class Solution {
-public:
-    bool isSymmetric(TreeNode* root) {
-        if(root==NULL) return true;
-        queue<TreeNode*> que;
-        que.push(root->left),que.push(root->right);
-        while(!que.empty())
-        {
-            TreeNode *left_node=que.front();
-            que.pop();
-            TreeNode *right_node=que.front();
-            que.pop();
-            if(left_node==NULL&&right_node==NULL) continue;
-            else if(left_node==NULL||right_node==NULL) return false;
-            else if(left_node->val!=right_node->val) return false;
-            que.push(left_node->left),que.push(right_node->right);
-            que.push(left_node->right),que.push(right_node->left);
-        }
-        return true;
-    }
-};
-```
-
 ## [剑指 Offer 32 - I. 从上到下打印二叉树](https://leetcode.cn/problems/cong-shang-dao-xia-da-yin-er-cha-shu-lcof/)
 
 ### 解法1：层序遍历
+
+$$
+O(n)+O(1)
+$$
 
 ```C++
 /**
@@ -1969,13 +1479,19 @@ public:
     vector<int> levelOrder(TreeNode* root) {
         vector<int> res;
         queue<TreeNode*> que;
-        if(root) que.push(root);
-        while(!que.empty()){
-            TreeNode* node=que.front();
+        if (root) {
+            que.push(root);
+        }
+        while (!que.empty()) {
+            TreeNode* node = que.front();
             que.pop();
             res.push_back(node->val);
-            if(node->left) que.push(node->left);
-            if(node->right) que.push(node->right);
+            if (node->left) {
+                que.push(node->left);
+            }
+            if (node->right) {
+                que.push(node->right);
+            }
         }
         return res;
     }
@@ -1985,6 +1501,10 @@ public:
 ## [剑指 Offer 32 - II. 从上到下打印二叉树 II](https://leetcode.cn/problems/cong-shang-dao-xia-da-yin-er-cha-shu-ii-lcof/)
 
 ### 解法1：层序遍历
+
+$$
+O(n)+O(n)
+$$
 
 ```C++
 /**
@@ -2001,16 +1521,22 @@ public:
     vector<vector<int>> levelOrder(TreeNode* root) {
         vector<vector<int>> res;
         queue<TreeNode*> que;
-        if(root) que.push(root);
-        while(!que.empty()){
-            int size=que.size();
+        if (root) {
+            que.push(root);
+        }
+        while (!que.empty()) {
+            int size = que.size();
             vector<int> path;
-            for(int i=0;i<size;i++){
-                TreeNode* node=que.front();
+            for (int i = 0; i < size; i++) {
+                TreeNode* node = que.front();
                 que.pop();
                 path.push_back(node->val);
-                if(node->left) que.push(node->left);
-                if(node->right) que.push(node->right);
+                if (node->left) {
+                    que.push(node->left);
+                }
+                if (node->right) {
+                    que.push(node->right);
+                }
             }
             res.push_back(path);
         }
@@ -2038,20 +1564,28 @@ public:
     vector<vector<int>> levelOrder(TreeNode* root) {
         vector<vector<int>> res;
         queue<TreeNode*> que;
-        if(root) que.push(root);
-        bool flag=false;
-        while(!que.empty()){
-            int size=que.size();
+        if (root) {
+            que.push(root);
+        }
+        bool flag = false;
+        while (!que.empty()) {
+            int size = que.size();
             vector<int> path;
-            for(int i=0;i<size;i++){
-                TreeNode* node=que.front();
+            for (int i = 0; i < size; i++) {
+                TreeNode* node = que.front();
                 que.pop();
                 path.push_back(node->val);
-                if(node->left) que.push(node->left);
-                if(node->right) que.push(node->right);
+                if (node->left) {
+                    que.push(node->left);
+                }
+                if (node->right) {
+                    que.push(node->right);
+                }
             }
-            if(flag) reverse(path.begin(),path.end());
-            flag=!flag;
+            if (flag) {
+                reverse(path.begin(), path.end());
+            }
+            flag = !flag;
             res.push_back(path);
         }
         return res;
@@ -2059,32 +1593,322 @@ public:
 };
 ```
 
-## [剑指 Offer 33. 二叉搜索树的后序遍历序列](https://leetcode.cn/problems/er-cha-sou-suo-shu-de-hou-xu-bian-li-xu-lie-lcof/)
+## ==[剑指 Offer 26. 树的子结构](https://leetcode.cn/problems/shu-de-zi-jie-gou-lcof/)==
 
-### 解法1：递归+分治
+### 解法1：递归
+
+$$
+O(mn)+O(m)
+$$
+
+```C++
+/**
+ * Definition for a binary tree node.
+ * struct TreeNode {
+ *     int val;
+ *     TreeNode *left;
+ *     TreeNode *right;
+ *     TreeNode(int x) : val(x), left(NULL), right(NULL) {}
+ * };
+ */
+class Solution {
+public:
+    bool isSub(TreeNode* A, TreeNode* B){
+        if (B == NULL) {
+            return true;
+        }
+        else if (A == NULL || A->val != B->val) {
+            return false;
+        }
+        return isSub(A->left, B->left) && isSub(A->right, B->right);
+    }
+    bool isSubStructure(TreeNode* A, TreeNode* B) {
+        if (A == NULL || B == NULL) {
+            return false;
+        }
+        return isSub(A,B) || isSubStructure(A->left, B) || isSubStructure(A->right, B);
+    }
+};
+```
+
+## ==[剑指 Offer 27. 二叉树的镜像](https://leetcode.cn/problems/er-cha-shu-de-jing-xiang-lcof/)==
+
+### 解法1：递归
+
+$$
+O(n)+O(n)
+$$
+
+```C++
+/**
+ * Definition for a binary tree node.
+ * struct TreeNode {
+ *     int val;
+ *     TreeNode *left;
+ *     TreeNode *right;
+ *     TreeNode(int x) : val(x), left(NULL), right(NULL) {}
+ * };
+ */
+class Solution {
+public:
+    TreeNode* mirrorTree(TreeNode* root) {
+        if (root == NULL) {
+            return NULL;
+        }
+        TreeNode* p = root->left;
+        root->left = mirrorTree(root->right);
+        root->right = mirrorTree(p);
+        return root;
+    }
+};
+```
+
+### 解法2：层序遍历
+
+$$
+O(n)+O(n)
+$$
+
+```C++
+/**
+ * Definition for a binary tree node.
+ * struct TreeNode {
+ *     int val;
+ *     TreeNode *left;
+ *     TreeNode *right;
+ *     TreeNode(int x) : val(x), left(NULL), right(NULL) {}
+ * };
+ */
+class Solution {
+public:
+    TreeNode* mirrorTree(TreeNode* root) {
+        queue<TreeNode*> que;
+        que.push(root);
+        while (!que.empty()) {
+            TreeNode* node = que.front();
+            que.pop();
+            if (node == NULL) {
+                continue;
+            }
+            swap(node->left, node->right);
+            que.push(node->left);
+            que.push(node->right);
+        }
+        return root;
+    }
+};
+```
+
+## ==[剑指 Offer 28. 对称的二叉树](https://leetcode.cn/problems/dui-cheng-de-er-cha-shu-lcof/)==
+
+### 解法1：递归
+
+$$
+O(n)+O(n)
+$$
+
+```C++
+/**
+ * Definition for a binary tree node.
+ * struct TreeNode {
+ *     int val;
+ *     TreeNode *left;
+ *     TreeNode *right;
+ *     TreeNode(int x) : val(x), left(NULL), right(NULL) {}
+ * };
+ */
+class Solution {
+public:
+    bool isSym(TreeNode* leftNode,TreeNode* rightNode){
+        if (leftNode == NULL && rightNode == NULL) {
+            return true;
+        }
+        else if (leftNode == NULL || rightNode == NULL) {
+            return false;
+        }
+        else if (leftNode->val != rightNode->val) {
+            return false;
+        }
+        else {
+            return isSym(leftNode->left,rightNode->right)&&isSym(leftNode->right,rightNode->left);
+        }
+    }
+    bool isSymmetric(TreeNode* root) {
+        if (root == NULL) {
+            return true;
+        }
+        return isSym(root->left, root->right);
+    }
+};
+```
+
+### 解法2：层序遍历
+
+$$
+O(n)+O(n)
+$$
+
+```C++
+/**
+ * Definition for a binary tree node.
+ * struct TreeNode {
+ *     int val;
+ *     TreeNode *left;
+ *     TreeNode *right;
+ *     TreeNode() : val(0), left(nullptr), right(nullptr) {}
+ *     TreeNode(int x) : val(x), left(nullptr), right(nullptr) {}
+ *     TreeNode(int x, TreeNode *left, TreeNode *right) : val(x), left(left), right(right) {}
+ * };
+ */
+class Solution {
+public:
+    bool isSymmetric(TreeNode* root) {
+        if (root == NULL) {
+            return true;
+        }
+        queue<TreeNode*> que;
+        que.push(root->left), que.push(root->right);
+        while (!que.empty()) {
+            TreeNode *left_node = que.front();
+            que.pop();
+            TreeNode *right_node = que.front();
+            que.pop();
+            if (left_node == NULL && right_node == NULL) {
+                continue;
+            }
+            else if (left_node == NULL || right_node == NULL) {
+                return false;
+            }
+            else if (left_node->val != right_node->val) {
+                return false;
+            }
+            else {
+                que.push(left_node->left), que.push(right_node->right);
+                que.push(left_node->right), que.push(right_node->left);
+            }
+        }
+        return true;
+    }
+};
+```
+
+## [剑指 Offer 12. 矩阵中的路径](https://leetcode.cn/problems/ju-zhen-zhong-de-lu-jing-lcof/)
+
+### 解法1：回溯
+
+$$
+时间复杂度：略
+$$
+
+$$
+空间复杂度：O(mn)
+$$
 
 ```C++
 class Solution {
 public:
-    bool verify(vector<int>& postorder,int left,int right){
-        if(left>=right) return true;
-        int pivot=postorder[right];
-        int l1=left,r1,l2=left,r2=right-1;
-        while(postorder[l2]<pivot) l2++;
-        r1=l2-1;
-        for(int i=l2;i<=r2;i++)
-            if(postorder[i]<pivot) return false;
-        return verify(postorder,l1,r1)&&verify(postorder,l2,r2);
+    bool traversal(int x,int y,int index,vector<vector<char>>& board,string word, vector<vector<bool>>& visit){
+        if (index == word.length() - 1 && board[x][y] == word[index]) {
+            return true;
+        }
+        else if (board[x][y] != word[index]) {
+            return false;
+        }
+        int dx[] = {0, 1, 0, -1};
+        int dy[] = {1, 0, -1, 0};
+        for (int i = 0; i < 4; i++) {
+            if (x + dx[i] >= 0 && x + dx[i] < board.size() && y + dy[i] >= 0 && y + dy[i] < board[0].size()) {
+                if (visit[x + dx[i]][y + dy[i]] == false) {
+                    visit[x + dx[i]][y + dy[i]] = true;
+                    if (traversal(x + dx[i], y + dy[i], index + 1, board, word, visit)) {
+                        return true;
+                    }
+                    visit[x + dx[i]][y + dy[i]] = false;
+                }
+            }
+        }
+        return false;
     }
-    bool verifyPostorder(vector<int>& postorder) {
-        return verify(postorder,0,postorder.size()-1);
+    bool exist(vector<vector<char>>& board, string word) {
+        vector<vector<bool>> visit(board.size(), vector<bool>(board[0].size(), false));
+        for (int i = 0; i < board.size(); i++) {
+            for (int j = 0; j < board[0].size(); j++) {
+                if (board[i][j] == word[0]) {
+                    visit[i][j] = true;
+                    if (traversal(i, j, 0, board, word, visit) == true) {
+                        return true;
+                    }
+                    visit[i][j] = false;
+                }
+            }
+        }
+        return false;
+    }
+};
+```
+
+## [剑指 Offer 13. 机器人的运动范围](https://leetcode.cn/problems/ji-qi-ren-de-yun-dong-fan-wei-lcof/)
+
+### 解法1：BFS
+
+$$
+O(mn)+O(mn)
+$$
+
+```C++
+class Solution {
+public:
+    bool judge(int x, int y, int k) {
+        int sum = 0;
+        while (x) {
+            sum += x % 10;
+            x /= 10;
+        }
+        while (y) {
+            sum += y % 10;
+            y /= 10;
+        }
+        if (sum <= k) {
+            return true;
+        }
+        else {
+            return false;
+        }
+    }
+    int movingCount(int m, int n, int k) {
+        vector<vector<bool>> visited(m, vector<bool>(n, false));
+        queue<pair<int, int>> que;
+        que.push({0, 0});
+        visited[0][0] = true;
+        int count = 1;
+        int dx[4] = {1, 0, -1, 0};
+        int dy[4] = {0, 1, 0, -1};
+        while (!que.empty()) {
+            pair<int, int> now = que.front();
+            que.pop();
+            int x = now.first, y = now.second;
+            for (int i = 0; i < 4; i++) {
+                if (x + dx[i] >= 0 && x + dx[i] < m && y + dy[i] >= 0 && y + dy[i] < n) {
+                    if (visited[x + dx[i]][y + dy[i]] == false && judge(x + dx[i], y + dy[i], k)) {
+                        que.push({x + dx[i], y + dy[i]});
+                        visited[x + dx[i]][y + dy[i]] = true;
+                        count++;
+                    }
+                }
+            }
+        }
+        return count;
     }
 };
 ```
 
 ## [剑指 Offer 34. 二叉树中和为某一值的路径](https://leetcode.cn/problems/er-cha-shu-zhong-he-wei-mou-yi-zhi-de-lu-jing-lcof/)
 
-### 解法1：回溯
+### 解法1：递归
+
+$$
+O(n)+O(n)
+$$
 
 ```C++
 /**
@@ -2102,30 +1926,28 @@ class Solution {
 public:
     vector<vector<int>> res;
     vector<int> path;
-    void traversal(TreeNode *node,int sum,int target){
-        if(node->left==NULL&&node->right==NULL){
-            if(sum==target) res.push_back(path);
+    void traversal(TreeNode *node, int sum, int target) {
+        if (node->left == NULL && node->right == NULL) {
+            if (sum == target) {
+                res.push_back(path);
+            }
             return;
         }
-        if(node->left){
+        if (node->left) {
             path.push_back(node->left->val);
-            sum+=node->left->val;
-            traversal(node->left,sum,target);
-            sum-=node->left->val;
+            traversal(node->left, sum + node->left->val, target);
             path.pop_back();
         }
-        if(node->right){
+        if (node->right) {
             path.push_back(node->right->val);
-            sum+=node->right->val;
-            traversal(node->right,sum,target);
-            sum-=node->right->val;
+            traversal(node->right, sum + node->right->val, target);
             path.pop_back();
         }
     }
     vector<vector<int>> pathSum(TreeNode* root, int target) {
-        if(root){
+        if (root) {
             path.push_back(root->val);
-            traversal(root,root->val,target);
+            traversal(root, root->val, target);
             path.pop_back();
         }
         return res;
@@ -2135,7 +1957,11 @@ public:
 
 ## [剑指 Offer 36. 二叉搜索树与双向链表](https://leetcode.cn/problems/er-cha-sou-suo-shu-yu-shuang-xiang-lian-biao-lcof/)
 
-### 解法
+### 解法1：中序遍历
+
+$$
+O(n)+O(1)
+$$
 
 ```C++
 /*
@@ -2163,24 +1989,25 @@ public:
 */
 class Solution {
 public:
-    Node *head=NULL,*pre=NULL;
+    Node* head = NULL;
     void traversal(Node* node){
-        if(node==NULL) return;
+        if (node == NULL) {
+            return;
+        }
         traversal(node->left);
-        Node* newNode=new Node(node->val);
-        if(pre==NULL){
-            head=newNode;
-            head->right=head;
-            head->left=head;
+        Node* nodeRight = node->right;
+        if (head == NULL){
+            head = node;
+            head->right = head;
+            head->left = head;
         }
-        else{
-            pre->right->left=newNode;
-            newNode->right=pre->right;
-            pre->right=newNode;
-            newNode->left=pre;
+        else {
+            head->left->right = node;
+            node->left = head->left;
+            node->right = head;
+            head->left = node;
         }
-        pre=newNode;
-        traversal(node->right);
+        traversal(nodeRight);
     }
     Node* treeToDoublyList(Node* root) {
         traversal(root);
@@ -2189,9 +2016,354 @@ public:
 };
 ```
 
-## [剑指 Offer 37. 序列化二叉树](https://leetcode.cn/problems/xu-lie-hua-er-cha-shu-lcof/)（==待做==）
+## [剑指 Offer 54. 二叉搜索树的第k大节点](https://leetcode.cn/problems/er-cha-sou-suo-shu-de-di-kda-jie-dian-lcof/)
 
-### 解法1（该解法会超时）
+### 解法1：中序遍历
+
+$$
+O(n)+O(1)
+$$
+
+```C++
+/**
+ * Definition for a binary tree node.
+ * struct TreeNode {
+ *     int val;
+ *     TreeNode *left;
+ *     TreeNode *right;
+ *     TreeNode(int x) : val(x), left(NULL), right(NULL) {}
+ * };
+ */
+class Solution {
+public:
+    int index=1,result;
+    void inOrder(TreeNode* node,int k){
+        if(node==NULL) return;
+        inOrder(node->right,k);
+        if(index==k) result=node->val;
+        index++;
+        inOrder(node->left,k);
+    }
+    int kthLargest(TreeNode* root, int k) {
+        inOrder(root,k);
+        return result;
+    }
+};
+```
+
+## [剑指 Offer 55 - I. 二叉树的深度](https://leetcode.cn/problems/er-cha-shu-de-shen-du-lcof/)
+
+### 解法1：递归
+
+$$
+O(n)+O(n)
+$$
+
+```C++
+/**
+ * Definition for a binary tree node.
+ * struct TreeNode {
+ *     int val;
+ *     TreeNode *left;
+ *     TreeNode *right;
+ *     TreeNode(int x) : val(x), left(NULL), right(NULL) {}
+ * };
+ */
+class Solution {
+public:
+    int maxDepth(TreeNode* root) {
+        if (root == NULL) {
+            return 0;
+        }
+        return 1 + max(maxDepth(root->left), maxDepth(root->right));
+    }
+};
+```
+
+## [剑指 Offer 55 - II. 平衡二叉树](https://leetcode.cn/problems/ping-heng-er-cha-shu-lcof/)
+
+### 解法1：递归
+
+$$
+O(n)+O(n)
+$$
+
+```C++
+/**
+ * Definition for a binary tree node.
+ * struct TreeNode {
+ *     int val;
+ *     TreeNode *left;
+ *     TreeNode *right;
+ *     TreeNode(int x) : val(x), left(NULL), right(NULL) {}
+ * };
+ */
+class Solution {
+public:
+    int getHeight(TreeNode* node){
+        if (node == NULL) {
+            return 0;
+        }
+        int leftHeight = getHeight(node->left);
+        if (leftHeight == -1) {
+            return -1;
+        }
+        int rightHeight = getHeight(node->right);
+        if (rightHeight == -1) {
+            return -1;
+        }
+        if(abs(leftHeight - rightHeight) > 1) {
+            return -1;
+        }
+        else return 1 + max(leftHeight, rightHeight);
+    }
+    bool isBalanced(TreeNode* root) {
+        int result = getHeight(root);
+        if (result == -1) {
+            return false;
+        }
+        else {
+            return true;
+        }
+    }
+};
+```
+
+## [剑指 Offer 64. 求1+2+…+n](https://leetcode.cn/problems/qiu-12n-lcof/)
+
+### 解法1：递归
+
+$$
+O(n)+O(n)
+$$
+
+```C++
+class Solution {
+public:
+    int sumNums(int n) {
+        n&&(n+=sumNums(n-1));
+        return n;
+    }
+};
+```
+
+### 解法2：位运算
+
+$$
+O(1)+O(1)
+$$
+
+```C++
+class Solution {
+public:
+    int sumNums(int n) {
+        int ans = 0, A = n, B = n + 1;
+
+        (B & 1) && (ans += A);
+        A <<= 1;
+        B >>= 1;
+
+        (B & 1) && (ans += A);
+        A <<= 1;
+        B >>= 1;
+
+        (B & 1) && (ans += A);
+        A <<= 1;
+        B >>= 1;
+
+        (B & 1) && (ans += A);
+        A <<= 1;
+        B >>= 1;
+
+        (B & 1) && (ans += A);
+        A <<= 1;
+        B >>= 1;
+
+        (B & 1) && (ans += A);
+        A <<= 1;
+        B >>= 1;
+
+        (B & 1) && (ans += A);
+        A <<= 1;
+        B >>= 1;
+
+        (B & 1) && (ans += A);
+        A <<= 1;
+        B >>= 1;
+
+        (B & 1) && (ans += A);
+        A <<= 1;
+        B >>= 1;
+
+        (B & 1) && (ans += A);
+        A <<= 1;
+        B >>= 1;
+
+        (B & 1) && (ans += A);
+        A <<= 1;
+        B >>= 1;
+
+        (B & 1) && (ans += A);
+        A <<= 1;
+        B >>= 1;
+
+        (B & 1) && (ans += A);
+        A <<= 1;
+        B >>= 1;
+
+        (B & 1) && (ans += A);
+        A <<= 1;
+        B >>= 1;
+
+        return ans >> 1;
+    }
+};
+```
+
+## [剑指 Offer 68 - I. 二叉搜索树的最近公共祖先](https://leetcode.cn/problems/er-cha-sou-suo-shu-de-zui-jin-gong-gong-zu-xian-lcof/)
+
+### 解法1：技巧
+
+$$
+O(n)+O(1)
+$$
+
+```C++
+/**
+ * Definition for a binary tree node.
+ * struct TreeNode {
+ *     int val;
+ *     TreeNode *left;
+ *     TreeNode *right;
+ *     TreeNode(int x) : val(x), left(NULL), right(NULL) {}
+ * };
+ */
+class Solution {
+public:
+    TreeNode* lowestCommonAncestor(TreeNode* root, TreeNode* p, TreeNode* q) {
+        if (p->val > q->val) {
+            swap(p,q);
+        }
+        TreeNode* node = root;
+        while (true) {
+            if (node->val < p->val) {
+                node = node->right;
+            }
+            else if (node->val > q->val) {
+                node = node->left;
+            }
+            else {
+                return node;
+            }
+        }
+        return NULL;
+    }
+};
+```
+
+## ==[剑指 Offer 68 - II. 二叉树的最近公共祖先](https://leetcode.cn/problems/er-cha-shu-de-zui-jin-gong-gong-zu-xian-lcof/)==
+
+### 解法1：递归
+
+$$
+O(n)+O(n)
+$$
+
+```C++
+/**
+ * Definition for a binary tree node.
+ * struct TreeNode {
+ *     int val;
+ *     TreeNode *left;
+ *     TreeNode *right;
+ *     TreeNode(int x) : val(x), left(NULL), right(NULL) {}
+ * };
+ */
+class Solution {
+public:
+    TreeNode* lowestCommonAncestor(TreeNode* root, TreeNode* p, TreeNode* q) {
+        if (root == NULL) {
+            return NULL;
+        }
+        if (root == p || root == q) {
+            return root;
+        }
+        TreeNode* left = lowestCommonAncestor(root->left, p, q);
+        TreeNode* right = lowestCommonAncestor(root->right, p, q);
+        if (left == NULL && right == NULL) {
+            return NULL;
+        }
+        else if (left == NULL) {
+            return right;
+        }
+        else if (right == NULL) {
+            return left;
+        }
+        else {
+            return root;
+        }
+    }
+};
+```
+
+### 解法2：存储父节点
+
+$$
+O(n)+O(n)
+$$
+
+```C++
+/**
+ * Definition for a binary tree node.
+ * struct TreeNode {
+ *     int val;
+ *     TreeNode *left;
+ *     TreeNode *right;
+ *     TreeNode(int x) : val(x), left(NULL), right(NULL) {}
+ * };
+ */
+class Solution {
+public:
+    unordered_map<int, TreeNode*> hash;
+    unordered_map<int, bool> visit;
+    void DFS(TreeNode* node){
+        if (node == NULL) {
+            return;
+        }
+        if (node->left) {
+            hash[node->left->val] = node;
+        }
+        if (node->right) {
+            hash[node->right->val] = node;
+        }
+        DFS(node->left);
+        DFS(node->right);
+    }
+    TreeNode* lowestCommonAncestor(TreeNode* root, TreeNode* p, TreeNode* q) {
+        hash[root->val] = NULL;
+        DFS(root);
+        while (p != NULL) {
+            visit[p->val] = true;
+            p = hash[p->val];
+        }
+        while (q != NULL) {
+            if (visit[q->val] == true) {
+                return q;
+            }
+            q = hash[q->val];
+        }
+        return NULL;
+    }
+};
+```
+
+## ==[剑指 Offer 37. 序列化二叉树](https://leetcode.cn/problems/xu-lie-hua-er-cha-shu-lcof/)==
+
+### 解法1：层序遍历
+
+$$
+O(n)+O(n)
+$$
 
 ```C++
 /**
@@ -2208,59 +2380,74 @@ public:
 
     // Encodes a tree to a single string.
     string serialize(TreeNode* root) {
-        string res="[";
+        string result = "[";
         queue<TreeNode*> que;
         que.push(root);
-        while(true){
-            int flag=false;
+        while (true) {
+            int flag = false;
             string temp;
-            int size=que.size();
-            for(int i=0;i<size;i++){
-                TreeNode* node=que.front();
+            int size = que.size();
+            for (int i = 0; i < size; i++) {
+                TreeNode* node = que.front();
                 que.pop();
-                if(node!=root) temp+=",";
-                if(node){
-                    flag=true;
-                    temp+=to_string(node->val);
+                if (node != root) {
+                    temp += ",";
+                }
+                if (node) {
+                    flag = true;
+                    temp += to_string(node->val);
                     que.push(node->left);
                     que.push(node->right);
                 }
-                else{
-                    temp+="null";
-                    que.push(NULL);
-                    que.push(NULL);
+                else {
+                    temp += "null";
                 }
             }
-            if(flag==true) res+=temp;
-            else break;
+            if (flag == true) {
+                result += temp;
+            }
+            else {
+                break;
+            }
         }
-        res+="]";
-        return res;
+        result += "]";
+        return result;
     }
 
     // Decodes your encoded data to tree.
     TreeNode* deserialize(string data) {
-        if(data=="[]") return NULL;
+        if (data == "[]") {
+            return NULL;
+        }
         string temp;
-        int count=1;
-        TreeNode* head=NULL;
+        int count = 1;
+        TreeNode* head = NULL;
         queue<TreeNode*> que;
-        for(int i=1;i<data.length();i++){
-            if(data[i]!=','&&data[i]!=']') temp+=data[i];
-            else{
-                if(temp=="null") que.push(NULL);
-                else{
-                    TreeNode* node=new TreeNode(stoi(temp));
+        for (int i = 1; i < data.length(); i++) {
+            if (data[i] != ',' && data[i] != ']') {
+                temp += data[i];
+            }
+            else {
+                if (temp != "null") {
+                    TreeNode* node = new TreeNode(stoi(temp));
                     que.push(node);
-                    if(head==NULL) head=node;
-                    else{
-                        TreeNode *pre=que.front();
-                        if(count%2==0) pre->left=node;
-                        else pre->right=node;
+                    if (head == NULL) {
+                        head = node;
+                    }
+                    else {
+                        TreeNode* pre = que.front();
+                        if (count % 2 == 0) {
+                            pre->left = node;
+                        }
+                        else {
+                            pre->right = node;
+                        }
                     }
                 }
-                temp="";
-                if(count!=1&&count%2) que.pop();
+                temp = "";
+                if (count != 1 && count %2 ) {
+                    que.pop();
+                }
                 count++;
             }
         }
@@ -2273,88 +2460,622 @@ public:
 // codec.deserialize(codec.serialize(root));
 ```
 
-## [剑指 Offer 38. 字符串的排列](https://leetcode.cn/problems/zi-fu-chuan-de-pai-lie-lcof/)（==待做==）
+## ==[剑指 Offer 38. 字符串的排列](https://leetcode.cn/problems/zi-fu-chuan-de-pai-lie-lcof/)==
 
-## [剑指 Offer 39. 数组中出现次数超过一半的数字](https://leetcode.cn/problems/shu-zu-zhong-chu-xian-ci-shu-chao-guo-yi-ban-de-shu-zi-lcof/)
+### 解法1：回溯
 
-### 解法1：哈希表（map）
+$$
+O(n*n!)+O(n)
+$$
 
 ```C++
 class Solution {
 public:
-    int majorityElement(vector<int>& nums) {
-        map<int,int> hash;
-        for(int i=0;i<nums.size();i++){
-            hash[nums[i]]++;
-            if(hash[nums[i]]>nums.size()/2) return nums[i];
+    vector<string> result;
+    string path;
+    void backtracking(const string& s, vector<bool>& used) {
+        if (path.length() == s.length()) {
+            result.push_back(path);
+            return;
         }
-        return -1;
+        for (int i = 0; i < s.length(); i++) {
+            if (i > 0 && s[i] == s[i - 1] && used[i - 1] == false) {
+                continue;
+            }
+            if (used[i] == false) {
+                used[i] = true;
+                path.push_back(s[i]);
+                backtracking(s, used);
+                path.pop_back();
+                used[i] = false;
+            }
+        }
+    }
+    vector<string> permutation(string s) {
+        sort(s.begin(), s.end());
+        vector<bool> used(s.length(), false);
+        backtracking(s, used);
+        return result;
     }
 };
 ```
 
-### 解法2：遍历
+### 解法2：下一个排列
 
-```c++
+$$
+O(n*n!)+O(1)
+$$
+
+```C++
 class Solution {
 public:
-    int majorityElement(vector<int>& nums) {
-        int result=nums[0],count=1;
-        for(int i=1;i<nums.size();i++){
-            if(count==0) result=nums[i];
-            if(result==nums[i]) count++;
-            else count--;
+    bool nextPermutation(string& s) {
+        int i = s.size() - 2;
+        while (i >= 0 && s[i] >= s[i + 1]) {
+            i--;
+        }
+        if (i < 0) {
+            return false;
+        }
+        int j = s.size() - 1;
+        while (j >= 0 && s[i] >= s[j]) {
+            j--;
+        }
+        swap(s[i], s[j]);
+        reverse(s.begin() + i + 1, s.end());
+        return true;
+    }
+
+    vector<string> permutation(string s) {
+        vector<string> result;
+        sort(s.begin(), s.end());
+        do {
+            result.push_back(s);
+        } while (nextPermutation(s));
+        return result;
+    }
+};
+```
+
+# 分治算法
+
+## ==[剑指 Offer 07. 重建二叉树](https://leetcode.cn/problems/zhong-jian-er-cha-shu-lcof/)==
+
+### 解法1：分治
+
+$$
+O(n^2)+O(n)
+$$
+
+```C++
+/**
+ * Definition for a binary tree node.
+ * struct TreeNode {
+ *     int val;
+ *     TreeNode *left;
+ *     TreeNode *right;
+ *     TreeNode(int x) : val(x), left(NULL), right(NULL) {}
+ * };
+ */
+class Solution {
+public:
+    TreeNode* traversal(const vector<int>& preorder, const vector<int>& inorder, int left1, int right1, int left2, int right2) {
+        if (left1 > right1 || left2 > right2) {
+            return NULL;
+        }
+        int mid;
+        for (mid = left2; mid <= right2; mid++) {
+            if (inorder[mid] == preorder[left1]) {
+                break;
+            }
+        }
+        int len1 = mid - left2;
+        TreeNode* node = new TreeNode(preorder[left1]);
+        node->left = traversal(preorder, inorder, left1 + 1, left1 + len1, left2, mid - 1);
+        node->right = traversal(preorder, inorder, left1 + len1+1 , right1, mid + 1, right2);
+        return node;
+    }
+    TreeNode* buildTree(vector<int>& preorder, vector<int>& inorder) {
+        int left1 = 0, right1 = preorder.size() - 1, left2 = 0, right2 = inorder.size() - 1;
+        TreeNode* root = traversal(preorder, inorder, left1, right1, left2, right2);
+        return root;
+    }
+};
+```
+
+### 解法2：分治+哈希
+
+$$
+O(n)+O(n)
+$$
+
+```C++
+/**
+ * Definition for a binary tree node.
+ * struct TreeNode {
+ *     int val;
+ *     TreeNode *left;
+ *     TreeNode *right;
+ *     TreeNode(int x) : val(x), left(NULL), right(NULL) {}
+ * };
+ */
+class Solution {
+public:
+    map<int, int> index; //index为map容器，用于记录中序遍历位置
+    TreeNode* traversal(const vector<int>& preorder, const vector<int>& inorder, int left1, int right1, int left2, int right2) {
+        if (left1 > right1 || left2 > right2) {
+            return NULL;
+        }
+        int mid = index[preorder[left1]];
+        int len1 = mid - left2;
+        TreeNode* node = new TreeNode(preorder[left1]);
+        node->left = traversal(preorder, inorder, left1 + 1, left1 + len1, left2, mid - 1);
+        node->right = traversal(preorder, inorder, left1 + len1+1 , right1, mid + 1, right2);
+        return node;
+    }
+    TreeNode* buildTree(vector<int>& preorder, vector<int>& inorder) {
+        int left1 = 0, right1 = preorder.size() - 1, left2 = 0, right2 = inorder.size() - 1;
+        for (int i = left2; i <= right2; i++) {
+            index[inorder[i]] = i;
+        }
+        TreeNode* root = traversal(preorder, inorder, left1, right1, left2, right2);
+        return root;
+    }
+};
+```
+
+### 解法3：迭代
+
+$$
+O(n)+O(n)
+$$
+
+```C++
+/**
+ * Definition for a binary tree node.
+ * struct TreeNode {
+ *     int val;
+ *     TreeNode *left;
+ *     TreeNode *right;
+ *     TreeNode(int x) : val(x), left(NULL), right(NULL) {}
+ * };
+ */
+class Solution {
+public:
+    TreeNode* buildTree(vector<int>& preorder, vector<int>& inorder) {
+        if (preorder.size() == 0) {
+            return NULL;
+        }
+        TreeNode* root = new TreeNode(preorder[0]);
+        stack<TreeNode*> st;
+        int indexInorder = 0;
+        st.push(root);
+        for (int i = 1; i < preorder.size(); i++) {
+            TreeNode* node = st.top();
+            if (node->val != inorder[indexInorder]) {
+                node->left = new TreeNode(preorder[i]);
+                st.push(node->left);
+            }
+            else {
+                while (!st.empty() && st.top()->val == inorder[indexInorder]) {
+                    node = st.top();
+                    st.pop();
+                    indexInorder++;
+                }
+                node->right = new TreeNode(preorder[i]);
+                st.push(node->right);
+            }
+        }
+        return root;
+    }
+};
+```
+
+## ==[剑指 Offer 16. 数值的整数次方](https://leetcode.cn/problems/shu-zhi-de-zheng-shu-ci-fang-lcof/)==
+
+### 解法1：快速幂
+
+$$
+O(\log n)+O(1)
+$$
+
+```C++
+class Solution {
+public:
+    double myPow(double x, int n) {
+        double result = 1;
+        bool flag = true;
+        long long k = n;
+        if (k < 0) {
+            flag = false;
+            k = -(long long)n;
+        }
+        while (k) {
+            if (k & 1) {
+                result *= x;
+            }
+            x *= x;
+            k >>= 1;
+        }
+        if (flag == false) {
+            result = 1 / result;
         }
         return result;
+    }
+};
+```
+
+### ==笔记：快速幂模板==
+
+```C++
+// 求m^k mod p, 时间复杂度为 O(log k)
+long long(int m,int k,int p){
+    long long res=1&p,t=m;
+    while(k){
+        if(k&1) res=res*t%p;
+        t=t*t;
+        k>>=1;
+    }
+    return res;
+}
+```
+
+## ==[剑指 Offer 33. 二叉搜索树的后序遍历序列](https://leetcode.cn/problems/er-cha-sou-suo-shu-de-hou-xu-bian-li-xu-lie-lcof/)==
+
+### 解法1：分治
+
+$$
+O(n^2)+O(n)
+$$
+
+```C++
+class Solution {
+public:
+    bool verify(vector<int>& postorder,int left,int right){
+        if (left >= right) {
+            return true;
+        }
+        int pivot = postorder[right];
+        int left1 = left, right1, left2 = left, right2 = right - 1;
+        while (postorder[left2] < pivot) {
+            left2++;
+        }
+        right1 = left2 - 1;
+        for (int i = left2; i <= right2; i++) {
+            if (postorder[i] < pivot) {
+                return false;
+            }
+        }
+        return verify(postorder, left1, right1) && verify(postorder, left2, right2);
+    }
+    bool verifyPostorder(vector<int>& postorder) {
+        return verify(postorder, 0, postorder.size() - 1);
+    }
+};
+```
+
+### 解法2：单调栈
+
+$$
+O(n)+o(n)
+$$
+
+```C++
+class Solution {
+public:
+    bool verifyPostorder(vector<int>& postorder) {
+        int root = INT_MAX;
+        stack<int> st;
+        for (int i = postorder.size() - 1; i >= 0; i--) {
+            if (postorder[i] > root) {
+                return false;
+            }
+            else {
+               while (!st.empty() && st.top() > postorder[i]) {
+                   root = st.top();
+                   st.pop();
+               }
+               st.push(postorder[i]);
+            }
+        }
+        return true;
+    }
+};
+```
+
+## ==[剑指 Offer 17. 打印从1到最大的n位数](https://leetcode.cn/problems/da-yin-cong-1dao-zui-da-de-nwei-shu-lcof/)==
+
+### 解法1：题意
+
+$$
+O(10^n)+O(1)
+$$
+
+```C++
+class Solution {
+public:
+    vector<int> printNumbers(int n) {
+        vector<int> res;
+        int count = 0;
+        for (int i = 0; i < n; i++) {
+            count = count * 10 + 9;
+        }
+        for (int i = 1; i <= count; i++) {
+            res.push_back(i);
+        }
+        return res;
+    }
+};
+```
+
+### 解法2：大数打印
+
+$$
+O(10^n)+O(10^n)
+$$
+
+```C++
+class Solution {
+public:
+    vector<int> res;
+    vector<int> printNumbers(int n) {
+        for (int i = 1; i <= n; i++) {
+            for (int j = 1; j <= 9; j++) {
+                dfs(1, i, to_string(j)); //dfs从1开始，因为第0位已经确定了
+            }
+        }
+        return res;
+    }
+    void dfs(int k, int n, string s) {
+        if (k == n) {
+            res.emplace_back(stoi(s));
+            return;
+        }
+        for (int i = 0; i < 10; i++) {
+            dfs(k + 1, n, s + to_string(i));
+        }
+    }
+};
+```
+
+## ==[剑指 Offer 51. 数组中的逆序对](https://leetcode.cn/problems/shu-zu-zhong-de-ni-xu-dui-lcof/)==
+
+### 解法1：归并排序
+
+$$
+o(n\log n)+O(n)
+$$
+
+```C++
+class Solution {
+public:
+    int count = 0;
+    void mergeSort(vector<int>& nums, vector<int>& temp, int left, int right) {
+        if (left >= right) {
+            return;
+        }
+        int mid = left + right >> 1;
+        mergeSort(nums, temp, left, mid);
+        mergeSort(nums, temp, mid + 1, right);
+        int cur1 = left, cur2 = mid + 1, cur3 = left;
+        while (cur1 <= mid && cur2 <= right) {
+            if (nums[cur1] <= nums [cur2]) {
+                temp[cur3++] = nums[cur1++];
+            }
+            else {
+                count += mid - cur1 + 1;
+                temp[cur3++] = nums[cur2++];
+            }
+        }
+        while (cur1 <= mid) {
+            temp[cur3++] = nums[cur1++];
+        }
+        while (cur2 <= right) {
+            temp[cur3++] = nums[cur2++];
+        }
+        for (int i = left; i <= right; i++) {
+            nums[i] = temp[i];
+        }
+    }
+    int reversePairs(vector<int>& nums) {
+        vector<int> temp(nums.size(), 0);
+        mergeSort(nums, temp, 0 ,nums.size() - 1);
+        return count;
+    }
+};
+```
+
+### 解法2：离散化树状数组
+
+$$
+O(n\log n)+O(n)
+$$
+
+```C++
+class BIT {
+private:
+    vector<int> tree;
+    int n;
+
+public:
+    BIT(int _n): n(_n), tree(_n + 1) {}
+
+    static int lowbit(int x) {
+        return x & (-x);
+    }
+
+    int query(int x) {
+        int ret = 0;
+        while (x) {
+            ret += tree[x];
+            x -= lowbit(x);
+        }
+        return ret;
+    }
+
+    void update(int x) {
+        while (x <= n) {
+            ++tree[x];
+            x += lowbit(x);
+        }
+    }
+};
+
+class Solution {
+public:
+    int reversePairs(vector<int>& nums) {
+        int n = nums.size();
+        vector<int> tmp = nums;
+        // 离散化
+        sort(tmp.begin(), tmp.end());
+        for (int& num: nums) {
+            num = lower_bound(tmp.begin(), tmp.end(), num) - tmp.begin() + 1;
+        }
+        // 树状数组统计逆序对
+        BIT bit(n);
+        int ans = 0;
+        for (int i = n - 1; i >= 0; --i) {
+            ans += bit.query(nums[i] - 1);
+            bit.update(nums[i]);
+        }
+        return ans;
+    }
+};
+```
+
+# 排序
+
+## [剑指 Offer 45. 把数组排成最小的数](https://leetcode.cn/problems/ba-shu-zu-pai-cheng-zui-xiao-de-shu-lcof/)
+
+### 解法1：快速排序
+
+$$
+O(n\log n)+O(n)
+$$
+
+```C++
+class Solution {
+public:
+    static bool cmp(const string& a,const string &b){
+        return a + b < b + a;
+    }
+    string minNumber(vector<int>& nums) {
+        vector<string> temp;
+        for (int i = 0; i < nums.size(); i++) {
+            temp.push_back(to_string(nums[i]));
+        }
+        sort(temp.begin(), temp.end(), cmp);
+        string result;
+        for (int i = 0; i < temp.size(); i++) {
+            result += temp[i];
+        }
+        return result;
+    }
+};
+```
+
+## [面试题61. 扑克牌中的顺子](https://leetcode.cn/problems/bu-ke-pai-zhong-de-shun-zi-lcof/)
+
+### 解法1：哈希
+
+$$
+O(n)+O(1)
+$$
+
+```C++
+class Solution {
+public:
+    bool isStraight(vector<int>& nums) {
+        int count[14] = {0};
+        int min = 14, max = 0;
+        for (int i = 0; i < nums.size(); i++) {
+            count[nums[i]]++;
+            if (nums[i] != 0 && nums[i] < min) {
+                min = nums[i];
+            }
+            if (nums[i] != 0 && nums[i] > max) {
+                max = nums[i];
+            }
+        }
+        if (count[0] == 5) {
+            return true;
+        }
+        for (int i = min; i <= max; i++) {
+            if (count[i] > 1) {
+                return false;
+            }
+            else if (count[i] == 1) {
+                continue;
+            }
+            else if (count[i] == 0 && count[0]) {
+                count[0]--;
+            }
+            else {
+                return false;
+            }
+        }
+        return true;
     }
 };
 ```
 
 ## ==[剑指 Offer 40. 最小的k个数](https://leetcode.cn/problems/zui-xiao-de-kge-shu-lcof/)==
 
-### 解法1：小根堆（priorit_queue实现）
+### 解法1：堆排序
+
+$$
+O(n\log k)+O(n)
+$$
 
 ```C++
 class Solution {
 public:
     vector<int> getLeastNumbers(vector<int>& arr, int k) {
-        priority_queue<int,vector<int>,greater<int>> q;
-        for(int i=0;i<arr.size();i++) q.push(arr[i]);
+        priority_queue<int, vector<int>, greater<int>> heap;
+        for (int i = 0; i < arr.size(); i++) {
+            heap.push(arr[i]);
+        }
         vector<int> result;
-        for(int i=0;i<k;i++){
-            result.push_back(q.top());
-            q.pop();
+        for (int i = 0; i < k; i++) {
+            result.push_back(heap.top());
+            heap.pop();
         }
         return result;
     }
 };
 ```
 
-### 解法2：小根堆（手动实现）
-
 ```C++
 class Solution {
-public:
     vector<int> heap;
     int size;
-    void down(int u){
-        int t=u;
-        if(u*2<=size&&heap[t]>heap[u*2]) t=u*2;
-        if(u*2+1<=size&&heap[t]>heap[u*2+1]) t=u*2+1;
-        if(u!=t){
-            swap(heap[u],heap[t]);
+public:
+    void down(int u) {
+        int t = u;
+        if (u * 2 <= size && heap[t] > heap[u * 2]) {
+            t = u * 2;
+        }
+        if (u * 2 + 1 <= size && heap[t] > heap[u * 2 + 1]) {
+            t = u * 2 + 1;
+        }
+        if (u != t) {
+            swap(heap[u], heap[t]);
             down(t);
         }
     }
     vector<int> getLeastNumbers(vector<int>& arr, int k) {
-        heap.push_back(0);
-        for(int i=0;i<arr.size();i++) heap.push_back(arr[i]);
-        size=arr.size();
-        for(int i=size/2;i;i--) down(i);
-        vector<int> result;
-        for(int i=0;i<k;i++){
-            result.push_back(heap[1]);
-            swap(heap[1],heap[size]);
+        heap.resize(arr.size() + 1);
+        for (int i = 0; i < arr.size(); i++) {
+            heap[i + 1] = arr[i];
+        }
+        size = arr.size();
+        for (int i = size / 2; i > 0; i--) {
+            down(i);
+        }
+        vector<int> result(k);
+        for (int i = 0; i < k; i++) {
+            result[i] = heap[1];
+            swap(heap[1], heap[size]);
             size--;
             down(1);
         }
@@ -2363,27 +3084,39 @@ public:
 };
 ```
 
-### 解法3：快排思想
+### 解法2：快速排序
 
 ```C++
 class Solution {
 public:
-    void quick_sort(vector<int>& arr,int l,int r,int k){
-        if(l>=r) return;
-        int i=l-1,j=r+1,x=arr[(l+r)>>1];
-        while(i<j){
-            while(arr[++i]<x);
-            while(arr[--j]>x);
-            if(i<j) swap(arr[i],arr[j]);
+    void quick_sort(vector<int>& arr, int left, int right, int k) {
+        if (left >= right) {
+            return;
         }
-        if(j==k-1) return;
-        else if(j<k-1) quick_sort(arr,j+1,r,k);
-        else quick_sort(arr,l,j,k);
+        int i = left - 1, j = right + 1, x = arr[left + right >> 1];
+        while (i < j) {
+            while (arr[++i] < x);
+            while (arr[--j] > x);
+            if (i < j) {
+                swap(arr[i], arr[j]);
+            }
+        }
+        if (j < k - 1) {
+            quick_sort(arr, j + 1, right, k);
+        }
+        else if (j > k - 1) {
+            quick_sort(arr, left, j, k);
+        }
+        else {
+            return;
+        }
     }
     vector<int> getLeastNumbers(vector<int>& arr, int k) {
-        quick_sort(arr,0,arr.size()-1,k);
-        vector<int> result;
-        for(int i=0;i<k;i++) result.push_back(arr[i]);
+        quick_sort(arr, 0, arr.size() - 1, k);
+        vector<int> result(k);
+        for (int i = 0; i < k; i++) {
+            result[i] = arr[i];
+        }
         return result;
     }
 };
@@ -2480,70 +3213,262 @@ void quick_sort2(int q[], int l, int r)
 }
 ```
 
-## [剑指 Offer 41. 数据流中的中位数](https://leetcode.cn/problems/shu-ju-liu-zhong-de-zhong-wei-shu-lcof/)（==待做==）
+## [剑指 Offer 41. 数据流中的中位数](https://leetcode.cn/problems/shu-ju-liu-zhong-de-zhong-wei-shu-lcof/)
+
+### 解法1：堆排序
+
+$$
+O(n\log n) + O(n)
+$$
+
+```C++
+class MedianFinder {
+    priority_queue<int, vector<int>, less<int>> maxHeap;
+    priority_queue<int, vector<int>, greater<int>> minHeap;
+public:
+    /** initialize your data structure here. */
+    MedianFinder() {
+
+    }
+    
+    void addNum(int num) {
+        if (maxHeap.empty() || num <= maxHeap.top()) {
+            maxHeap.push(num);
+            while (maxHeap.size() > minHeap.size() + 1) {
+                minHeap.push(maxHeap.top());
+                maxHeap.pop();
+            }
+        }
+        else {
+            minHeap.push(num);
+            while (maxHeap.size() < minHeap.size()) {
+                maxHeap.push(minHeap.top());
+                minHeap.pop();
+            }
+        }
+    }
+    
+    double findMedian() {
+        if (maxHeap.size() > minHeap.size()) {
+            return maxHeap.top() * 1.0;
+        }
+        else {
+            return (maxHeap.top() + minHeap.top()) * 1.0 / 2;
+        }
+    }
+};
+
+/**
+ * Your MedianFinder object will be instantiated and called as such:
+ * MedianFinder* obj = new MedianFinder();
+ * obj->addNum(num);
+ * double param_2 = obj->findMedian();
+ */
+```
+
+# 动态规划
+
+## [剑指 Offer 10- I. 斐波那契数列](https://leetcode.cn/problems/fei-bo-na-qi-shu-lie-lcof/)
+
+### 解法1：递推
+
+$$
+O(n)+O(1)
+$$
+
+```C++
+class Solution {
+public:
+    int fib(int n) {
+        int N = 1e9 + 7;
+        if (n <= 1) {
+            return n;
+        }
+        int a = 0, b = 1;
+        for (int i = 2; i <= n; i++) {
+            int temp = b;
+            b = (a + b) % N;
+            a = temp;
+        }
+        return b;
+    }
+};
+```
+
+## [剑指 Offer 10- II. 青蛙跳台阶问题](https://leetcode.cn/problems/qing-wa-tiao-tai-jie-wen-ti-lcof/)
+
+### 解法1：动态规划
+
+$$
+O(n)+O(n)
+$$
+
+```C++
+class Solution {
+public:
+    int numWays(int n) {
+        int dp[101], N = 1e9 + 7;
+        dp[0] = 1, dp[1] = 1;
+        for (int i = 2; i <= n; i++) {
+            dp[i] = (dp[i - 2] + dp[i - 1]) % N;
+        }
+        return dp[n];
+    }
+};
+```
+
+## [剑指 Offer 63. 股票的最大利润](https://leetcode.cn/problems/gu-piao-de-zui-da-li-run-lcof/)
+
+### 解法1：动态规划
+
+$$
+O(n)+O(n)
+$$
+
+```C++
+class Solution {
+public:
+    int maxProfit(vector<int>& prices) {
+        if (prices.size() == 0) {
+            return 0;
+        }
+        vector<vector<int>> dp(prices.size(), vector<int>(2, 0));
+        dp[0][0] = -prices[0], dp[0][1] = 0;
+        for (int i = 1; i < prices.size(); i++) {
+            dp[i][0] = max(dp[i - 1][0], -prices[i]);
+            dp[i][1] = max(dp[i - 1][1], dp[i][0] + prices[i]);
+        }
+        return dp[prices.size() - 1][1];
+    }
+};
+```
+
+### 解法2：贪心
+
+$$
+O(n)+O(1)
+$$
+
+```C++
+class Solution {
+public:
+    int maxProfit(vector<int>& prices) {
+        if (prices.size() == 0) {
+            return 0;
+        }
+        int minPrice = prices[0], result = 0;
+        for (int i = 0; i < prices.size(); i++){
+            result = max(result, prices[i] - minPrice);
+            minPrice = min(minPrice, prices[i]);
+        }
+        return result;
+    }
+};
+```
 
 ## [剑指 Offer 42. 连续子数组的最大和](https://leetcode.cn/problems/lian-xu-zi-shu-zu-de-zui-da-he-lcof/)
 
+### 解法1：动态规划
+
+$$
+O(n)+O(n)
+$$
+
+```C++
+class Solution {
+public:
+    int maxSubArray(vector<int>& nums) {
+        vector<int> dp(nums.size() + 1, 0);
+        int result = -10010;
+        for (int i = 1; i <= nums.size(); i++) {
+            dp[i] = max(nums[i - 1], dp[i - 1] + nums[i - 1]);
+            result = max(result, dp[i]);
+        }
+        return result;
+    }
+};
+```
+
 ### 解法1：贪心
 
+$$
+O(n)+O(1)
+$$
+
 ```C++
 class Solution {
 public:
     int maxSubArray(vector<int>& nums) {
-        int max=-10010,i=0,sum=0;
-        for(int i=0;i<nums.size();i++){
-            sum+=nums[i];
-            if(sum>max) max=sum;
-            if(sum<0){
-                sum=0;
-                continue;
+        int result = -10010, sum = 0;
+        for (int i = 0; i < nums.size(); i++) {
+            sum += nums[i];
+            result = max(result, sum);
+            if (sum < 0) {
+                sum = 0;
             }
         }
-        return max;
+        return result;
     }
 };
 ```
 
-### 解法2：动态规划
+## [剑指 Offer 47. 礼物的最大价值](https://leetcode.cn/problems/li-wu-de-zui-da-jie-zhi-lcof/)
+
+### 解法1：动态规划
+
+$$
+O(mn)+O(mn)
+$$
 
 ```C++
 class Solution {
 public:
-    int maxSubArray(vector<int>& nums) {
-        vector<int> dp(nums.size()+1,0);
-        int MAX=-10010;
-        for(int i=1;i<=nums.size();i++){
-            dp[i]=max(nums[i-1],dp[i-1]+nums[i-1]);
-            MAX=max(MAX,dp[i]);
+    int maxValue(vector<vector<int>>& grid) {
+        vector<vector<int>> dp(grid.size(), vector<int>(grid[0].size(), 0));
+        int m = grid.size(), n = grid[0].size();
+        for (int i = 0; i < m; i++) {
+            for (int j = 0; j < n; j++) {
+                if (i && j) {
+                    dp[i][j] = max(dp[i - 1][j], dp[i][j - 1]) + grid[i][j];
+                }
+                else if (i) {
+                    dp[i][j] = dp[i - 1][j] + grid[i][j];
+                }
+                else if (j) {
+                    dp[i][j] = dp[i][j - 1] + grid[i][j];
+                }
+                else {
+                    dp[i][j] = grid[i][j];
+                }
+            }
         }
-        return MAX;
+        return dp[m - 1][n - 1];
     }
 };
 ```
-
-## [剑指 Offer 43. 1～n 整数中 1 出现的次数](https://leetcode.cn/problems/1nzheng-shu-zhong-1chu-xian-de-ci-shu-lcof/)（==待做==）
-
-## [剑指 Offer 44. 数字序列中某一位的数字](https://leetcode.cn/problems/shu-zi-xu-lie-zhong-mou-yi-wei-de-shu-zi-lcof/)（==待做==）
 
 ## ==[剑指 Offer 46. 把数字翻译成字符串](https://leetcode.cn/problems/ba-shu-zi-fan-yi-cheng-zi-fu-chuan-lcof/)==
 
-### 解法1
+### 解法1：动态规划
+
+$$
+O(n)+O(n)
+$$
 
 ```C++
 class Solution {
 public:
     int translateNum(int num) {
-        string s=to_string(num);
-        vector<int> dp(s.length()+1,0);
-        dp[0]=1;
-        for(int i=0;i<s.length();i++){
-            dp[i+1]+=dp[i];
-            if(i){
-                if(s[i-1]=='1') dp[i+1]+=dp[i-1];
-                if(s[i-1]=='2'&&s[i]<='5') dp[i+1]+=dp[i-1];
+        string str = to_string(num);
+        vector<int> dp(str.length() + 1);
+        dp[0] = 1;
+        for (int i = 0; i < str.length(); i++) {
+            dp[i + 1] = dp[i];
+            if (i > 0 && (str[i - 1] == '1' || str[i - 1] == '2' && str[i] <= '5')) {
+                dp[i + 1] += dp[i - 1];
             }
         }
-        return dp[s.length()];
+        return dp[str.length()];
     }
 };
 ```
@@ -2580,78 +3505,92 @@ itoa(n,str2,10);
 cout << str2 << endl;
 ```
 
-## [剑指 Offer 47. 礼物的最大价值](https://leetcode.cn/problems/li-wu-de-zui-da-jie-zhi-lcof/)
+## [剑指 Offer 48. 最长不含重复字符的子字符串](https://leetcode.cn/problems/zui-chang-bu-han-zhong-fu-zi-fu-de-zi-zi-fu-chuan-lcof/)
+
+### 解法1：滑动窗口+哈希
+
+$$
+O(n)+O(C)
+$$
+
+```C++
+class Solution {
+public:
+    int lengthOfLongestSubstring(string s) {
+        unordered_map<char, int> count;
+        int j = 0;
+        int result = 0;
+        for (int i = 0; i < s.size(); i++) {
+            while (j < s.size() && count[s[j]] == 0){
+                count[s[j]]++;
+                result = max(result, j - i + 1);
+                j++;
+            }
+            count[s[i]]--;
+        }
+        return result;
+    }
+};
+```
+
+## ==[剑指 Offer 19. 正则表达式匹配](https://leetcode.cn/problems/zheng-ze-biao-da-shi-pi-pei-lcof/)==
 
 ### 解法1：动态规划
 
 ```C++
 class Solution {
 public:
-    int maxValue(vector<vector<int>>& grid) {
-        vector<vector<int>> dp(grid.size(),vector<int>(grid[0].size(),0));
-        int m=grid.size(),n=grid[0].size();
-        for(int i=0;i<m;i++){
-            for(int j=0;j<n;j++){
-                if(i&&j) dp[i][j]=max(dp[i-1][j],dp[i][j-1])+grid[i][j];
-                else if(i) dp[i][j]=dp[i-1][j]+grid[i][j];
-                else if(j) dp[i][j]=dp[i][j-1]+grid[i][j];
-                else dp[i][j]=grid[i][j];
+    bool isMatch(string s, string p) {
+        int m = s.size(), n = p.size();
+        vector<vector<bool>> dp(m + 1, vector<bool>(n + 1, false));
+        dp[0][0] = true;
+        for (int i = 0; i <= m; i++) {
+            for (int j = 1; j <= n; j++) {
+                if (i >= 1 && (s[i - 1] == p[j - 1] || p[j - 1] == '.')) {
+                    dp[i][j] = dp[i - 1][j - 1];
+                }
+                else if (p[j - 1] == '*' && j >= 2) {
+                    dp[i][j] = dp[i][j] || dp[i][j - 2];
+                    if (i >= 1 && (s[i - 1] == p[j - 2] || p[j - 2] == '.')) {
+                        dp[i][j] = dp[i][j] || dp[i - 1][j];
+                    }
+                }
             }
         }
-        return dp[m-1][n-1];
-    }
-};
-```
-
-## [剑指 Offer 48. 最长不含重复字符的子字符串](https://leetcode.cn/problems/zui-chang-bu-han-zhong-fu-zi-fu-de-zi-zi-fu-chuan-lcof/)
-
-### 解法1：滑动窗口
-
-```C++
-class Solution {
-public:
-    int lengthOfLongestSubstring(string s) {
-        unordered_set<char>set;
-        int j=0;
-        int res=0;
-        for (int i=0;i<s.size();i++){
-            while(j<s.size()&&set.find(s[j])==set.end()){
-                set.insert(s[j]);
-                res=max(res, j-i+1);
-                j++;
-            }
-            set.erase(s[i]);
-        }
-        return res;
+        return dp[m][n];
     }
 };
 ```
 
 ## [剑指 Offer 49. 丑数](https://leetcode.cn/problems/chou-shu-lcof/)
 
-### 解法1：小根堆
+### 解法1：堆排序
+
+$$
+O(n\log n)+O(n)
+$$
 
 ```C++
 class Solution {
 public:
     int nthUglyNumber(int n) {
-        unordered_set<long long> set;
-        priority_queue<long long,vector<long long>,greater<long long>> heap;
+        unordered_set<long long> uset;
+        priority_queue<long long, vector<long long>, greater<long long>> heap;
         heap.push(1L);
-        set.insert(1L);
-        int factor[3]={2,3,5};
-        long long res;
-        for(int i=0;i<n;i++){
-            res=heap.top();
+        uset.insert(1L);
+        int factor[3] = {2, 3, 5};
+        long long result;
+        for (int i = 0; i < n; i++) {
+            result = heap.top();
             heap.pop();
-            for(int j=0;j<3;j++){
-                if(set.find(res*factor[j])==set.end()){
-                    heap.push(res*factor[j]);
-                    set.insert(res*factor[j]);
+            for (int j = 0; j < 3; j++) {
+                if (uset.find(result * factor[j]) == uset.end()) {
+                    heap.push(result * factor[j]);
+                    uset.insert(result * factor[j]);
                 }
             }
         }
-        return (int)res;
+        return (int)result;
     }
 };
 ```
@@ -2662,129 +3601,132 @@ public:
 class Solution {
 public:
     int nthUglyNumber(int n) {
-        int a=0,b=0,c=0;
-        vector<int> dp(n,0);
-        dp[0]=1;
-        for(int i=1;i<n;i++){
-            int n1=dp[a]*2,n2=dp[b]*3,n3=dp[c]*5;
-            dp[i]=min(min(n1,n2),n3);
-            if(dp[i]==n1) a++;
-            if(dp[i]==n2) b++;
-            if(dp[i]==n3) c++;
+        int a = 0, b = 0, c = 0;
+        vector<int> dp(n, 0);
+        dp[0] = 1;
+        for (int i = 1; i < n; i++) {
+            int n1 = dp[a] * 2, n2 = dp[b] * 3, n3 = dp[c] * 5;
+            dp[i] = min(min(n1, n2), n3);
+            if (dp[i] == n1) {
+                a++;
+            }
+            if (dp[i] == n2) {
+                b++;
+            }
+            if (dp[i] == n3) {
+                c++;
+            }
         }
-        return dp[n-1];
+        return dp[n - 1];
     }
 };
 ```
 
-## [剑指 Offer 51. 数组中的逆序对](https://leetcode.cn/problems/shu-zu-zhong-de-ni-xu-dui-lcof/)（==待做==）
+## [剑指 Offer 60. n个骰子的点数](https://leetcode.cn/problems/nge-tou-zi-de-dian-shu-lcof/)
 
-## [剑指 Offer 54. 二叉搜索树的第k大节点](https://leetcode.cn/problems/er-cha-sou-suo-shu-de-di-kda-jie-dian-lcof/)
+### 解法1：动态规划
 
-### 解法1
+$$
+O(n^2)+O(n^2)
+$$
 
 ```C++
-/**
- * Definition for a binary tree node.
- * struct TreeNode {
- *     int val;
- *     TreeNode *left;
- *     TreeNode *right;
- *     TreeNode(int x) : val(x), left(NULL), right(NULL) {}
- * };
- */
 class Solution {
 public:
-    int index=1,result;
-    void inOrder(TreeNode* node,int k){
-        if(node==NULL) return;
-        inOrder(node->right,k);
-        if(index==k) result=node->val;
-        index++;
-        inOrder(node->left,k);
-    }
-    int kthLargest(TreeNode* root, int k) {
-        inOrder(root,k);
+    vector<double> dicesProbability(int n) {
+        vector<double> result(6, 1.0 / 6.0);
+        for (int i = 2; i <= n; i++) {
+            vector<double> temp(i * 5 + 1, 0);
+            for (int j = 0; j < temp.size(); j++) {
+                for (int k = max(j - 5, 0); k <= min(j, (int)result.size() - 1); k++) { // (int)result.size() - 1 里的 (int)不能省，否则会报错
+                    temp[j] += result[k] * 1.0 / 6.0;
+                }
+            }
+            result = temp;
+        }
         return result;
     }
 };
 ```
 
-## [剑指 Offer 55 - I. 二叉树的深度](https://leetcode.cn/problems/er-cha-shu-de-shen-du-lcof/)
+# 位运算
 
-### 解法1
+## [剑指 Offer 15. 二进制中1的个数](https://leetcode.cn/problems/er-jin-zhi-zhong-1de-ge-shu-lcof/)
+
+### 解法1：位运算
+
+$$
+O(\log n)+O(1)
+$$
 
 ```C++
-/**
- * Definition for a binary tree node.
- * struct TreeNode {
- *     int val;
- *     TreeNode *left;
- *     TreeNode *right;
- *     TreeNode(int x) : val(x), left(NULL), right(NULL) {}
- * };
- */
 class Solution {
 public:
-    int maxDepth(TreeNode* root) {
-        if(root==NULL) return 0;
-        return 1+max(maxDepth(root->left),maxDepth(root->right));
+    int hammingWeight(uint32_t n) {
+        int count = 0;
+        while (n) {
+            if (n & 1) {
+                count++;
+            }
+            n >>= 1;
+        }
+        return count;
     }
 };
 ```
 
-## [剑指 Offer 55 - II. 平衡二叉树](https://leetcode.cn/problems/ping-heng-er-cha-shu-lcof/)
+## [剑指 Offer 65. 不用加减乘除做加法](https://leetcode.cn/problems/bu-yong-jia-jian-cheng-chu-zuo-jia-fa-lcof/)
 
-### 解法1
+### 解法1：位运算
+
+$$
+O(\log n)+O(1)
+$$
 
 ```C++
-/**
- * Definition for a binary tree node.
- * struct TreeNode {
- *     int val;
- *     TreeNode *left;
- *     TreeNode *right;
- *     TreeNode(int x) : val(x), left(NULL), right(NULL) {}
- * };
- */
 class Solution {
 public:
-    int getHeight(TreeNode* node){
-        if(node==NULL) return 0;
-        int leftHeight=getHeight(node->left);
-        if(leftHeight==-1) return -1;
-        int rightHeight=getHeight(node->right);
-        if(rightHeight==-1) return -1;
-
-        if(abs(leftHeight-rightHeight)>1) return -1;
-        else return 1+max(leftHeight,rightHeight);
-    }
-    bool isBalanced(TreeNode* root) {
-        int result=getHeight(root);
-        if(result==-1) return false;
-        else return true;
+    int add(int a, int b) {
+        while (b) {
+            unsigned carry = (unsigned)(a & b) << 1;
+            a = a ^ b;
+            b = carry;
+        }
+        return a;
     }
 };
 ```
 
 ## [剑指 Offer 56 - I. 数组中数字出现的次数](https://leetcode.cn/problems/shu-zu-zhong-shu-zi-chu-xian-de-ci-shu-lcof/)
 
-### 解法1：分组异或（位运算）
+### 解法1：位运算
+
+$$
+O(\log n)+O(1)
+$$
 
 ```C++
 class Solution {
 public:
     vector<int> singleNumbers(vector<int>& nums) {
-        int ret=0;
-        for(int n:nums) ret^=n;
-        int div=1;
-        while((div&ret)==0) div<<=1;
-        int a=0,b=0;
-        for(int n:nums){
-            if(div&n) a^=n;
-            else b^=n;
+        int ret = 0;
+        for (int n: nums) {
+            ret ^= n;
         }
-        return vector<int>{a,b};
+        int div = 1;
+        while ((div & ret) == 0) {
+            div <<= 1;
+        }
+        int a = 0, b = 0;
+        for (int n: nums) {
+            if (div & n) {
+                a ^= n;
+            }
+            else {
+                b ^= n;
+            }
+        }
+        return vector<int>{a, b};
     }
 };
 ```
@@ -2797,139 +3739,95 @@ public:
 class Solution {
 public:
     int singleNumber(vector<int>& nums) {
-        vector<int> count(31,0);
-        for(int n:nums){
-            for(int j=0;j<31;j++){
-                count[j]+=n&1;
-                n>>=1;
+        vector<int> count(31, 0);
+        for (int n: nums) {
+            for (int j = 0; j < 31; j++) {
+                count[j] += n & 1;
+                n >>= 1;
             }
         }
-        int res=0;
-        for(int j=30;j>=0;j--){
-            res<<=1;
-            res+=count[j]%3;
+        int res = 0;
+        for (int j = 30; j >= 0; j--) {
+            res <<= 1;
+            res += count[j] % 3;
         }
         return res;
     }
 };
 ```
 
-## [剑指 Offer 57 - II. 和为s的连续正数序列](https://leetcode.cn/problems/he-wei-sde-lian-xu-zheng-shu-xu-lie-lcof/)（==待做==）
+# 数学
 
-## [剑指 Offer 64. 求1+2+…+n](https://leetcode.cn/problems/qiu-12n-lcof/)
+## [剑指 Offer 39. 数组中出现次数超过一半的数字](https://leetcode.cn/problems/shu-zu-zhong-chu-xian-ci-shu-chao-guo-yi-ban-de-shu-zi-lcof/)
 
-### 解法1：递归+逻辑运算
+### 解法1：哈希
 
-```C++
-class Solution {
-public:
-    int sumNums(int n) {
-        n&&(n+=sumNums(n-1));
-        return n;
-    }
-};
-```
-
-### 解法2：快速乘+位运算
+$$
+O(n)+O(n)
+$$
 
 ```C++
 class Solution {
 public:
-    int sumNums(int n) {
-        int ans = 0, A = n, B = n + 1;
-
-        (B & 1) && (ans += A);
-        A <<= 1;
-        B >>= 1;
-
-        (B & 1) && (ans += A);
-        A <<= 1;
-        B >>= 1;
-
-        (B & 1) && (ans += A);
-        A <<= 1;
-        B >>= 1;
-
-        (B & 1) && (ans += A);
-        A <<= 1;
-        B >>= 1;
-
-        (B & 1) && (ans += A);
-        A <<= 1;
-        B >>= 1;
-
-        (B & 1) && (ans += A);
-        A <<= 1;
-        B >>= 1;
-
-        (B & 1) && (ans += A);
-        A <<= 1;
-        B >>= 1;
-
-        (B & 1) && (ans += A);
-        A <<= 1;
-        B >>= 1;
-
-        (B & 1) && (ans += A);
-        A <<= 1;
-        B >>= 1;
-
-        (B & 1) && (ans += A);
-        A <<= 1;
-        B >>= 1;
-
-        (B & 1) && (ans += A);
-        A <<= 1;
-        B >>= 1;
-
-        (B & 1) && (ans += A);
-        A <<= 1;
-        B >>= 1;
-
-        (B & 1) && (ans += A);
-        A <<= 1;
-        B >>= 1;
-
-        (B & 1) && (ans += A);
-        A <<= 1;
-        B >>= 1;
-
-        return ans >> 1;
-    }
-};
-```
-
-## [剑指 Offer 65. 不用加减乘除做加法](https://leetcode.cn/problems/bu-yong-jia-jian-cheng-chu-zuo-jia-fa-lcof/)
-
-### 解法1：位运算
-
-```C++
-class Solution {
-public:
-    int add(int a, int b) {
-        while(b!=0){
-            unsigned carry=(unsigned)(a&b)<<1;
-            a^=b;
-            b=carry;
+    int majorityElement(vector<int>& nums) {
+        map<int, int> count;
+        for (int i = 0; i < nums.size(); i++) {
+            count[nums[i]]++;
+            if (count[nums[i]] > nums.size() / 2) {
+                return nums[i];
+            }
         }
-        return a;
+        return -1;
+    }
+};
+```
+
+### 解法2：摩尔投票
+
+```c++
+class Solution {
+public:
+    int majorityElement(vector<int>& nums) {
+        int result = nums[0], count = 1;
+        for (int i = 1; i < nums.size(); i++) {
+            if (count == 0) {
+                result = nums[i];
+            }
+            if (result == nums[i]) {
+                count++;
+            }
+            else {
+                count--;
+            }
+        }
+        return result;
     }
 };
 ```
 
 ## [剑指 Offer 66. 构建乘积数组](https://leetcode.cn/problems/gou-jian-cheng-ji-shu-zu-lcof/)
 
-### 解法1：左右乘积列表
+### 解法1：动态规划
+
+$$
+O(n)+O(n)
+$$
 
 ```C++
 class Solution {
 public:
     vector<int> constructArr(vector<int>& a) {
-        vector<int> left(a.size(),1),right(a.size(),1);
-        for(int i=1;i<a.size();i++) left[i]=left[i-1]*a[i-1];
-        for(int i=a.size()-2;i>=0;i--) right[i]=right[i+1]*a[i+1];
-        vector<int> result(a.size(),0);
-        for(int i=0;i<a.size();i++) result[i]=left[i]*right[i];
+        vector<int> left(a.size(), 1), right(a.size(), 1);
+        for (int i = 1; i <a.size(); i++) {
+            left[i] =left[i - 1] * a[i - 1];
+        }
+        for (int i = a.size() - 2; i >= 0; i--) {
+            right[i] = right[i + 1] * a[i + 1];
+        }
+        vector<int> result(a.size(), 0);
+        for (int i = 0; i < a.size(); i++) {
+            result[i] = left[i] * right[i];
+        }
         return result;
     }
 };
@@ -2941,142 +3839,209 @@ public:
 class Solution {
 public:
     vector<int> constructArr(vector<int>& a) {
-        vector<int> result(a.size(),1);
-        for(int i=1;i<a.size();i++) result[i]=result[i-1]*a[i-1];
-        int r=1;
-        for(int i=a.size()-1;i>=0;i--){
-            result[i]=result[i]*r;
-            r*=a[i];
+        vector<int> result(a.size(), 1);
+        for (int i = 1; i < a.size(); i++) {
+            result[i] = result[i - 1] * a[i - 1];
+        }
+        int r = 1;
+        for (int i = a.size() - 1; i >= 0; i--) {
+            result[i] = result[i] * r;
+            r *= a[i];
         }
         return result;
     }
 };
 ```
 
-## [剑指 Offer 68 - I. 二叉搜索树的最近公共祖先](https://leetcode.cn/problems/er-cha-sou-suo-shu-de-zui-jin-gong-gong-zu-xian-lcof/)
+## [剑指 Offer 14- I. 剪绳子](https://leetcode.cn/problems/jian-sheng-zi-lcof/)
 
-### 解法1
+### 解法1：数学
 
-```C++
-/**
- * Definition for a binary tree node.
- * struct TreeNode {
- *     int val;
- *     TreeNode *left;
- *     TreeNode *right;
- *     TreeNode(int x) : val(x), left(NULL), right(NULL) {}
- * };
- */
-class Solution {
-public:
-    TreeNode* lowestCommonAncestor(TreeNode* root, TreeNode* p, TreeNode* q) {
-        if(p->val>q->val) swap(p,q);
-        TreeNode *node=root;
-        while(true)
-        {
-            if(node->val<p->val) node=node->right;
-            else if(node->val>q->val) node=node->left;
-            else return node;
-        }
-        return NULL;
-    }
-};
-```
-
-## ==[剑指 Offer 68 - II. 二叉树的最近公共祖先](https://leetcode.cn/problems/er-cha-shu-de-zui-jin-gong-gong-zu-xian-lcof/)==
-
-### 解法1：递归
-
-```C++
-/**
- * Definition for a binary tree node.
- * struct TreeNode {
- *     int val;
- *     TreeNode *left;
- *     TreeNode *right;
- *     TreeNode(int x) : val(x), left(NULL), right(NULL) {}
- * };
- */
-class Solution {
-public:
-    TreeNode* lowestCommonAncestor(TreeNode* root, TreeNode* p, TreeNode* q) {
-        if(root==NULL) return NULL;
-        if(root==p||root==q) return root;
-        TreeNode *left=lowestCommonAncestor(root->left,p,q);
-        TreeNode *right=lowestCommonAncestor(root->right,p,q);
-        if(left==NULL&&right==NULL) return NULL;
-        else if(left==NULL) return right;
-        else if(right==NULL) return left;
-        else return root;
-    }
-};
-```
-
-### 解法2：存储父节点
-
-```C++
-/**
- * Definition for a binary tree node.
- * struct TreeNode {
- *     int val;
- *     TreeNode *left;
- *     TreeNode *right;
- *     TreeNode(int x) : val(x), left(NULL), right(NULL) {}
- * };
- */
-class Solution {
-public:
-    unordered_map<int,TreeNode*> hash;
-    unordered_map<int,bool> visit;
-    void DFS(TreeNode* node){
-        if(node==NULL) return;
-        if(node->left) hash[node->left->val]=node;
-        if(node->right) hash[node->right->val]=node;
-        DFS(node->left);
-        DFS(node->right);
-    }
-    TreeNode* lowestCommonAncestor(TreeNode* root, TreeNode* p, TreeNode* q) {
-        hash[root->val]=NULL;
-        DFS(root);
-        while(p!=NULL){
-            visit[p->val]=true;
-            p=hash[p->val];
-        }
-        while(q!=NULL){
-            if(visit[q->val]==true) return q;
-            q=hash[q->val];
-        }
-        return NULL;
-    }
-};
-```
-
-## [面试题45. 把数组排成最小的数](https://leetcode.cn/problems/ba-shu-zu-pai-cheng-zui-xiao-de-shu-lcof/)
-
-## [面试题61. 扑克牌中的顺子](https://leetcode.cn/problems/bu-ke-pai-zhong-de-shun-zi-lcof/)
-
-### 解法1：哈希
+$$
+O(n)+O(1)
+$$
 
 ```C++
 class Solution {
 public:
-    bool isStraight(vector<int>& nums) {
-        int count[14]={0};
-        int min=14,max=0;
-        for(int i=0;i<nums.size();i++){
-            count[nums[i]]++;
-            if(nums[i]!=0&&nums[i]<min) min=nums[i];
-            if(nums[i]!=0&&nums[i]>max) max=nums[i];
+    int cuttingRope(int n) {
+        if (n == 2) {
+            return 1;
         }
-        if(count[0]==5) return true;
-        for(int i=min;i<=max;i++){
-            if(count[i]>1) return false;
-            else if(count[i]==1) continue;
-            else if(count[i]==0&&count[0]) count[0]--;
-            else return false;
+        if (n == 3) {
+            return 2;
         }
-        return true;
+        if (n == 4) {
+            return 4;
+        }
+        int result = 1;
+        while (n > 4){
+            result *= 3;
+            n -= 3;
+        }
+        result *= n;
+        return result;
     }
 };
 ```
 
+## [剑指 Offer 14- II. 剪绳子 II](https://leetcode.cn/problems/jian-sheng-zi-ii-lcof/)
+
+### 解法1：数学
+
+$$
+O(n)+O(1)
+$$
+
+```C++
+class Solution {
+public:
+    int cuttingRope(int n) {
+        int mod = 1e9 + 7;
+        if (n == 2) {
+            return 1;
+        }
+        if (n == 3) {
+            return 2;
+        }
+        if (n == 4) {
+            return 4;
+        }
+        int result = 1;
+        while (n > 4) {
+            int temp = result;
+            result = (result + temp) % mod;
+            result = (result + temp) % mod;
+            n -= 3;
+        }
+        int temp = result;
+        for (int i = 0; i < n - 1; i++) {
+            result = (result + temp) % mod;
+        }
+        return result;
+    }
+};
+```
+
+## [剑指 Offer 57 - II. 和为s的连续正数序列](https://leetcode.cn/problems/he-wei-sde-lian-xu-zheng-shu-xu-lie-lcof/)
+
+### 解法1：滑动窗口
+
+$$
+O(n)+O(1)
+$$
+
+```C++
+class Solution {
+public:
+    vector<vector<int>> findContinuousSequence(int target) {
+        vector<vector<int>> result;
+        int j = 1, sum = 1;
+        for (int i = 1; i <= target / 2 + 1; i++) {
+            while (sum < target) {
+                j++;
+                sum += j;
+            }
+            if (sum == target) {
+                vector<int> temp(j - i + 1);
+                for (int k = 0; k < temp.size(); k++) {
+                    temp[k] = k + i;
+                }
+                result.push_back(temp);
+            }
+            sum -= i;
+        }
+        return result;
+    }
+};
+```
+
+## [剑指 Offer 62. 圆圈中最后剩下的数字](https://leetcode.cn/problems/yuan-quan-zhong-zui-hou-sheng-xia-de-shu-zi-lcof/)
+
+### 解法1：数学+递归
+
+$$
+O(n)+O(n)
+$$
+
+```C++
+class Solution {
+public:
+    int lastRemaining(int n, int m) {
+        if (n == 1) {
+            return 0;
+        }
+        else {
+            int x = lastRemaining(n - 1, m);
+            return (m + x) % n;
+        }
+    }
+};
+```
+
+### 解法2：数学+迭代
+
+$$
+O(n)+O(1)
+$$
+
+```C++
+class Solution {
+public:
+    int lastRemaining(int n, int m) {
+        int x = 0;
+        for (int i = 2; i <= n; i++) {
+            x = (m + x) % i;
+        }
+        return x;
+    }
+};
+```
+
+## [剑指 Offer 43. 1～n 整数中 1 出现的次数](https://leetcode.cn/problems/1nzheng-shu-zhong-1chu-xian-de-ci-shu-lcof/)
+
+### 解法1：数学
+
+$$
+O(\log n)+O(C)
+$$
+
+```C++
+class Solution {
+public:
+    int countDigitOne(int n) {
+        unsigned int count[10];
+        for (int i = 0; i < 10; i++) {
+            count[i] = (unsigned int)pow(10, i - 1) * i;
+        }
+        unsigned int result = 0;
+        int num[10], temp = n;
+        for (int i = 0; i < 10; i++) {
+            num[i] = temp % 10;
+            temp /= 10;
+        }
+        temp = 0;
+        int front = 0;
+        for (int i = 9; i >= 0; i--) {
+            if (num[i] == 0);
+            else if (num[i] == 1) {
+                result += front * (unsigned)pow(10, i) * num[i];
+                result += count[i] + 1;
+                front++;
+            }
+            else {
+                result += front * (unsigned)pow(10, i) * num[i];
+                result += num[i] * count[i] + (unsigned)pow(10, i);
+            }
+        }
+
+        return (int)result;
+    }
+};
+```
+
+
+
+
+
+## [剑指 Offer 44. 数字序列中某一位的数字](https://leetcode.cn/problems/shu-zi-xu-lie-zhong-mou-yi-wei-de-shu-zi-lcof/)（==待做==）
